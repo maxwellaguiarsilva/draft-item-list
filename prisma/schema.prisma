@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id    String @id // Google sub identifier
+  lists List[]
+}
+
+model List {
+  id        String   @id @default(cuid())
+  name      String
+  category  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  groups    Group[]
+  items     Item[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  name      String
+  position  Int
+  listId    String
+  list      List     @relation(fields: [listId], references: [id])
+  parentId  String?
+  parent    Group?   @relation("GroupToGroup", fields: [parentId], references: [id])
+  children  Group[]  @relation("GroupToGroup")
+  items     Item[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Item {
+  id        String   @id @default(cuid())
+  name      String
+  quantity  Int      @default(1)
+  position  Int
+  groupId   String?
+  group     Group?   @relation(fields: [groupId], references: [id])
+  listId    String
+  list      List     @relation(fields: [listId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
