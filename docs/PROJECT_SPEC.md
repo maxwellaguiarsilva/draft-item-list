@@ -37,14 +37,17 @@
 - **Language:** TypeScript
 - **Framework:** Next.js (App Router)
 - **Hosting:** Vercel
-- **Database:** PostgreSQL (Neon)
+- **Database:** PostgreSQL (Local Docker container for development)
 - **ORM:** Prisma
-- **UI/Accessibility:** shadcn/ui (Radix UI)
-- **Authentication:** Auth.js (v5) - Google Provider only. Stores only the unique `sub` identifier; no email or profile data collection.
+## Authentication
+- **Authentication:** Auth.js (v5) - Google Provider only. 
+- **Data Policy:** The Prisma Adapter requires standard fields (`email`, `name`, `image`) to manage user sessions and account linking. These fields are persisted to support Auth.js/Prisma Adapter functionality.
+- **Secrets Management:** Sensitive secrets (`AUTH_GOOGLE_SECRET`, `AUTH_SECRET`) MUST be managed using Google Secret Manager in production environments. See `docs/GCP_AUTH_DEPLOY.md` for details.
 
-## Migration Note
-This project is being moved from an Android/ARM environment to a Linux/x86_64 environment. After cloning this repository, ensure the following steps are performed:
-1. Initialize the environment: `npm install`.
-2. Configure environment variables (e.g., `DATABASE_URL` for Neon PostgreSQL).
-3. Run migrations to initialize the database: `npx prisma migrate dev`.
-4. Generate the Prisma Client: `npx prisma generate`.
+## Migration & Environment Configuration
+Este projeto está sendo movido de um ambiente Android/ARM para Linux/x86_64. Após clonar este repositório, siga as instruções detalhadas em `docs/ENV_SETUP.md` para configurar o seu ambiente de desenvolvimento.
+
+Para realizar a inicialização do banco de dados e a geração de tipos, utilize:
+1. `npx prisma migrate dev`: Executa migrações locais para inicializar o PostgreSQL.
+2. `npx prisma generate`: Gera o Prisma Client atualizado.
+
