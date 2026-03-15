@@ -1,0 +1,10 @@
+services:
+  database:
+    container_name: "postgres-dev"
+    image: "postgres:alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: draft_item_list
