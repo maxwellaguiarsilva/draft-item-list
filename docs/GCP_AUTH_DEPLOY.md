@@ -76,3 +76,14 @@ gcloud run services describe [NOME_DO_SERVICO] --format="table(spec.template.spe
 ```
 Certifique-se de que as variáveis apontam para os segredos configurados.
 
+---
+
+## Futuro: Automação com IaC
+
+Para alcançar a automação total da infraestrutura do GCP (evitando Console Web), utilizaremos **Terraform** (IaC):
+
+- **OAuth:** Provisionamento da tela de consentimento e IDs via recursos `google_iap_*` ou APIs de serviços.
+- **Segredos:** Gerenciamento dos segredos (`secret manager`) via `google_secret_manager_secret`.
+- **Pipeline:** Integração com GitHub Actions para automação de deploy contínuo.
+
+```
