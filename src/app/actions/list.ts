@@ -11,6 +11,13 @@ export async function createList(data: { name: string; category: string }) {
   revalidatePath("/dashboard");
 }
 
+export async function duplicateList(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  await listService.duplicate(session.user.id, id);
+  revalidatePath("/dashboard");
+}
+
 export async function deleteList(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
