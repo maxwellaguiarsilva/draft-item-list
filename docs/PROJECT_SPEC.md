@@ -10,6 +10,13 @@
 - **Zero-Code Phase:** No code until explicit instruction.
 
 ## UX Guidelines
+- **Visuals:** Full dark mode (background: `#000000`, text: `#FFFFFF`).
+- **Sidebar:** Collapsible, containing lists (VSCode/GCP-style).
+- **Selection:** Selected list highlighted with a dark blue background.
+- **Onboarding:** New users start with a pre-created "List" automatically selected.
+- **Interactions:**
+    - Single click: Load list groups/items.
+    - Long-press (mobile) / Hover (desktop): Enable "Edit Mode" (Rename, Duplicate, Reorder, Delete - using icons only, represented by a three-dot menu icon).
 - **List Category:** Free-form text input with a UI button (e.g., '+') to select existing categories, avoiding manual re-typing.
 - **Duplication:** Duplicated lists, groups, and items are inserted immediately after the original entity.
 - **Counter:** Simple + and - buttons; '-' disabled when value is 1.
