@@ -25,7 +25,10 @@ The project has successfully completed the foundation (Phase 1) and authenticati
     - Implemented sidebar toggle and interaction menu (Delete/Duplicate).
     - Implemented Dark Mode base styling (`globals.css`).
     - Implemented `AppContext` and `AppProvider` for centralized state management.
-    - Implemented Server Actions for List, Group, and Item management (`src/app/actions/`).
+    - Implemented ListDetailView component for displaying selected list contents.
+    - Updated Dashboard page to render ListDetailView.
+    - Moved ListForm to Sidebar.
+
 
 ### Current Status
 - Authentication and List/Group/Item management (CRUD + Duplication) are fully functional.
@@ -33,7 +36,7 @@ The project has successfully completed the foundation (Phase 1) and authenticati
 - Ready for UI component implementation for Group and Item management.
 
 ### Next Steps
-- Develop Group and Item management UI components.
 - Implement recursive group structure and item positioning in the UI.
 - Refine UI with Vanilla CSS based on UX principles.
+- Add drag-and-drop or reordering functionality.
 

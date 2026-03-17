@@ -25,9 +25,8 @@ export async function deleteList(id: string) {
   revalidatePath("/dashboard");
 }
 
-export async function updateList(id: string, data: { name?: string; category?: string }) {
+export async function getListDetails(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
-  await listService.update(session.user.id, id, data);
-  revalidatePath("/dashboard");
+  return await listService.getListDetails(session.user.id, id);
 }

@@ -30,17 +30,17 @@ export const listService = {
     });
   },
 
-  async duplicate(userId: string, id: string) {
-    const list = await prisma.list.findUnique({
+  async getListDetails(userId: string, id: string) {
+    return prisma.list.findUnique({
       where: { id, userId },
-    });
-    if (!list) throw new Error("List not found");
-
-    return prisma.list.create({
-      data: {
-        name: `${list.name} (Copy)`,
-        category: list.category,
-        userId,
+      include: {
+        groups: {
+          include: {
+            children: { include: { items: true } },
+            items: true,
+          },
+          orderBy: { position: "asc" },
+        },
       },
     });
   },
