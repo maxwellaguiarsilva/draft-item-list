@@ -16,4 +16,18 @@ export const listService = {
       },
     });
   },
+
+  async delete(userId: string, id: string) {
+    return prisma.list.delete({
+      where: { id, userId },
+    });
+  },
+
+  async update(userId: string, id: string, data: { name?: string; category?: string }) {
+    return prisma.list.update({
+      where: { id, userId },
+      data,
+    });
+  },
 };
+
