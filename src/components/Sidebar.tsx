@@ -5,7 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import { deleteList, duplicateList } from '../app/actions/list';
 
 export const Sidebar = ({ lists }: { lists: any[] }) => {
-  const { selectedListId, setSelectedListId } = useAppContext();
+  const { selectedListId, setSelectedListId, isSidebarOpen, toggleSidebar } = useAppContext();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   return (
@@ -62,7 +62,8 @@ export const Sidebar = ({ lists }: { lists: any[] }) => {
             </div>
           </li>
         ))}
-      </ul>
+        </ul>
+      )}
     </aside>
   );
 };
