@@ -23,12 +23,12 @@ Establish the project environment, initialize the database infrastructure (Local
 ## Local Development Infrastructure
 To ensure a consistent development environment, we use a local PostgreSQL container managed by Docker Compose.
 
-1.  **Create `compose.yaml` in the project root:**
+1.  **Create `compose.yaml` in the `infra/` directory:**
 ```yaml
 services:
   database:
     container_name: "postgres-dev"
-    image: "postgres:17.2-alpine"
+    image: "postgres:alpine"
     ports:
       - "5432:5432"
     environment:
@@ -39,7 +39,7 @@ services:
 
 2.  **Start the database:**
 ```bash
-docker-compose up -d
+docker-compose -f infra/compose.yaml up -d
 ```
 
 3.  **Configure `.env` for Prisma:**
