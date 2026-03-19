@@ -28,4 +28,5 @@ This document defines the steps for uploading changes to the remote repository.
 ## 5. Error Handling & Interruptions
 - **Stop and Report:** If you encounter *any* issues (unexpected behavior, file inconsistencies, failed validations, or potential security risks), **immediately stop** execution and report the situation to the user for resolution.
 - **Do Not Attempt Autonomous Resolution:** If the process deviates from expectations, do not attempt to fix it yourself. Request guidance from the user.
+- **Automation & Completion:** Outside of the critical issues mentioned above, the process MUST be executed autonomously to completion. Interruptions for user interaction are ONLY permitted for reporting critical errors or to provide a final confirmation that all steps have been executed successfully.
 
