@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { ListDetailView } from "@/components/ListDetailView";
+import { Sidebar } from "@/components/Sidebar";
+import { listService } from "@/services/list.service";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -8,9 +10,14 @@ export default async function DashboardPage() {
     redirect("/api/auth/signin");
   }
 
+  const lists = await listService.getAll(session.user.id);
+
   return (
-    <main className="p-8">
-      <ListDetailView />
-    </main>
+    <div className="dashboard-container">
+      <Sidebar lists={lists} />
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <ListDetailView />
+      </main>
+    </div>
   );
 }

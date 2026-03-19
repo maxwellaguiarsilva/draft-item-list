@@ -12,10 +12,10 @@ export function ListForm() {
   }, null);
 
   return (
-    <form action={action} className="p-4 border rounded">
-      <input name="name" placeholder="List Name" required className="border p-2" />
-      <input name="category" placeholder="Category" required className="border p-2" />
-      <button type="submit" disabled={pending} className="bg-blue-500 text-white p-2">
+    <form action={action} className="form-container" style={{ border: '1px solid var(--border-color)', borderRadius: '4px' }}>
+      <input name="name" placeholder="List Name" required className="input-field" />
+      <input name="category" placeholder="Category" required className="input-field" />
+      <button type="submit" disabled={pending} className="primary-button">
         {pending ? "Creating..." : "Create List"}
       </button>
     </form>

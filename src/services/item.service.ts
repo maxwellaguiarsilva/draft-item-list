@@ -1,14 +1,17 @@
 import { prisma } from "../lib/prisma";
 
 export const itemService = {
-  async getByList(listId: string) {
+  async getByList(userId: string, listId: string) {
     return prisma.item.findMany({
-      where: { listId },
+      where: { listId, list: { userId } },
       orderBy: { position: "asc" },
     });
   },
 
-  async create(listId: string, data: { name: string; quantity?: number; position: number; groupId?: string }) {
+  async create(userId: string, listId: string, data: { name: string; quantity?: number; position: number; groupId?: string }) {
+    const list = await prisma.list.findUnique({ where: { id: listId, userId } });
+    if (!list) throw new Error("Unauthorized");
+
     return prisma.item.create({
       data: {
         ...data,
@@ -17,14 +20,26 @@ export const itemService = {
     });
   },
 
-  async update(id: string, data: { name?: string; quantity?: number; position?: number; groupId?: string }) {
+  async update(userId: string, id: string, data: { name?: string; quantity?: number; position?: number; groupId?: string }) {
+    const item = await prisma.item.findUnique({
+      where: { id },
+      include: { list: true }
+    });
+    if (!item || item.list.userId !== userId) throw new Error("Unauthorized");
+
     return prisma.item.update({
       where: { id },
       data,
     });
   },
 
-  async delete(id: string) {
+  async delete(userId: string, id: string) {
+    const item = await prisma.item.findUnique({
+      where: { id },
+      include: { list: true }
+    });
+    if (!item || item.list.userId !== userId) throw new Error("Unauthorized");
+
     return prisma.item.delete({
       where: { id },
     });

@@ -10,40 +10,39 @@ export const Sidebar = ({ lists }: { lists: any[] }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   return (
-    <aside className="w-64 bg-black border-r border-gray-800 h-screen p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-white">Lists</h2>
-        <button onClick={toggleSidebar} className="text-gray-400">☰</button>
+    <aside className="sidebar">
+      <div className="sidebar-header">
+        <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Lists</h2>
+        <button onClick={toggleSidebar} className="icon-button">☰</button>
       </div>
       {isSidebarOpen && (
-        <>
-          <div className="mb-4">
+        <div className="sidebar-content">
+          <div style={{ marginBottom: '1rem' }}>
             <ListForm />
           </div>
-          <ul className="space-y-2">
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {lists.map((list) => (
               <li
                 key={list.id}
-                className={`flex items-center justify-between p-2 rounded cursor-pointer ${
-                  selectedListId === list.id ? 'bg-blue-900' : 'hover:bg-gray-800'
-                }`}
+                className={`list-item ${selectedListId === list.id ? 'selected' : ''}`}
                 onClick={() => setSelectedListId(list.id)}
               >
                 <span>{list.name}</span>
-                <div className="relative">
+                <div style={{ position: 'relative' }}>
                   <button
-                    className="text-gray-400 hover:text-white px-2"
+                    className="icon-button"
+                    style={{ fontSize: '1rem' }}
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingId(editingId === list.id ? null : list.id);
                     }}
                   >
-                    ...
+                    ⋮
                   </button>
                   {editingId === list.id && (
-                    <div className="absolute right-0 bg-gray-900 border border-gray-700 rounded p-2 z-10">
+                    <div className="menu-popup">
                       <button
-                        className="block w-full text-left p-1 text-sm hover:bg-gray-800"
+                        className="menu-item"
                         onClick={(e) => {
                           e.stopPropagation();
                           duplicateList(list.id);
@@ -53,7 +52,7 @@ export const Sidebar = ({ lists }: { lists: any[] }) => {
                         Duplicate
                       </button>
                       <button
-                        className="block w-full text-left p-1 text-sm text-red-500 hover:bg-gray-800"
+                        className="menu-item danger"
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteList(list.id);
@@ -68,7 +67,7 @@ export const Sidebar = ({ lists }: { lists: any[] }) => {
               </li>
             ))}
           </ul>
-        </>
+        </div>
       )}
     </aside>
   );
