@@ -51,10 +51,4 @@
 - **Data Policy:** The Prisma Adapter requires standard fields (`email`, `name`, `image`) to manage user sessions and account linking. These fields are persisted to support Auth.js/Prisma Adapter functionality.
 - **Secrets Management:** Sensitive secrets (`AUTH_GOOGLE_SECRET`, `AUTH_SECRET`) MUST be managed using Google Secret Manager in production environments. See `docs/GCP_AUTH_DEPLOY.md` for details.
 
-## Migration & Environment Configuration
-Este projeto está sendo movido de um ambiente Android/ARM para Linux/x86_64. Após clonar este repositório, siga as instruções detalhadas em `docs/ENV_SETUP.md` para configurar o seu ambiente de desenvolvimento.
-
-Para realizar a inicialização do banco de dados e a geração de tipos, utilize:
-1. `npx prisma migrate dev`: Executa migrações locais para inicializar o PostgreSQL.
-2. `npx prisma generate`: Gera o Prisma Client atualizado.
 
