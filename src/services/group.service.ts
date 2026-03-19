@@ -60,11 +60,24 @@ export const groupService = {
     if (!sourceGroup || sourceGroup.list.userId !== userId) throw new Error("Unauthorized");
 
     return prisma.$transaction(async (tx) => {
-      // Shift subsequent groups to make room
+      // Shift subsequent groups and items to make room
+      const shiftWhere = {
+        listId: sourceGroup.listId,
+        parentId: sourceGroup.parentId,
+        position: { gt: sourceGroup.position },
+      };
+
       await tx.group.updateMany({
+        where: shiftWhere,
+        data: {
+          position: { increment: 1 },
+        },
+      });
+
+      await tx.item.updateMany({
         where: {
           listId: sourceGroup.listId,
-          parentId: sourceGroup.parentId,
+          groupId: sourceGroup.parentId,
           position: { gt: sourceGroup.position },
         },
         data: {

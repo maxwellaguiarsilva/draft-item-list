@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { getListDetails } from '../app/actions/list';
-import { updateItem, deleteItem, createItem, duplicateItem, updateItemPosition } from '../app/actions/item';
-import { updateGroup, deleteGroup, createGroup, duplicateGroup, updateGroupPosition } from '../app/actions/group';
+import { getListDetails, swapEntities } from '../app/actions/list';
+import { updateItem, deleteItem, createItem, duplicateItem } from '../app/actions/item';
+import { updateGroup, deleteGroup, createGroup, duplicateGroup } from '../app/actions/group';
 
 interface Item {
   id: string;
@@ -178,7 +178,7 @@ const ItemView = ({ item, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDow
   );
 };
 
-const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: {
+const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown, searchQuery }: {
   group: Group;
   listId: string;
   onRefresh: () => void;
@@ -186,8 +186,26 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  searchQuery: string;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  const filterEntity = (entity: Item | Group): boolean => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    
+    // Check if current matches
+    if (entity.name.toLowerCase().includes(query)) return true;
+    
+    // Check descendants
+    if (!('quantity' in entity)) {
+      const g = entity as Group;
+      const hasMatchingChild = (g.children || []).some(child => filterEntity(child));
+      const hasMatchingItem = (g.items || []).some(item => item.name.toLowerCase().includes(query));
+      return hasMatchingChild || hasMatchingItem;
+    }
+    return false;
+  };
 
   const handleDelete = async () => {
     if (confirm(`Delete group "${group.name}" and all its contents?`)) {
@@ -238,20 +256,15 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
     const current = combined[index];
     const neighbor = combined[neighborIndex];
     
-    const updatePos = async (entity: Item | Group, newPos: number) => {
-      if ('quantity' in entity) {
-        await updateItemPosition(entity.id, newPos);
-      } else {
-        await updateGroupPosition(entity.id, newPos);
-      }
-    };
-
-    await updatePos(current, neighbor.position);
-    await updatePos(neighbor, current.position);
+    await swapEntities(
+      { id: current.id, type: 'quantity' in current ? 'item' : 'group', position: current.position },
+      { id: neighbor.id, type: 'quantity' in neighbor ? 'item' : 'group', position: neighbor.position }
+    );
     onRefresh();
   };
 
   const combined = [...(group.items || []), ...(group.children || [])].sort((a, b) => a.position - b.position);
+  const filtered = combined.filter(entity => filterEntity(entity));
 
   return (
     <div 
@@ -287,7 +300,7 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
       </div>
 
       <div style={{ padding: 0 }}>
-        {combined.map((entity, index) => {
+        {filtered.map((entity, index) => {
           const isItem = 'quantity' in entity;
           if (isItem) {
             return (
@@ -296,7 +309,7 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
                 item={entity as Item} 
                 onRefresh={onRefresh}
                 canMoveUp={index > 0}
-                canMoveDown={index < (combined.length - 1)}
+                canMoveDown={index < (filtered.length - 1)}
                 onMoveUp={() => handleMoveInside(index, 'up', combined)}
                 onMoveDown={() => handleMoveInside(index, 'down', combined)}
               />
@@ -309,9 +322,10 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
                 listId={listId} 
                 onRefresh={onRefresh}
                 canMoveUp={index > 0}
-                canMoveDown={index < (combined.length - 1)}
+                canMoveDown={index < (filtered.length - 1)}
                 onMoveUp={() => handleMoveInside(index, 'up', combined)}
                 onMoveDown={() => handleMoveInside(index, 'down', combined)}
+                searchQuery={searchQuery}
               />
             );
           }
@@ -326,6 +340,7 @@ export const ListDetailView = () => {
   const [list, setList] = useState<List | null>(null);
   const [loading, setLoading] = useState(false);
   const [prevId, setPrevId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Set loading state during render if the ID changed to avoid synchronous effect updates
   if (selectedListId !== prevId) {
@@ -333,6 +348,7 @@ export const ListDetailView = () => {
     if (selectedListId) {
       setLoading(true);
       setList(null);
+      setSearchQuery("");
     } else {
       setLoading(false);
       setList(null);
@@ -390,20 +406,34 @@ export const ListDetailView = () => {
     const current = combined[index];
     const neighbor = combined[neighborIndex];
     
-    const updatePos = async (entity: Item | Group, newPos: number) => {
-      if ('quantity' in entity) {
-        await updateItemPosition(entity.id, newPos);
-      } else {
-        await updateGroupPosition(entity.id, newPos);
-      }
-    };
-
-    await updatePos(current, neighbor.position);
-    await updatePos(neighbor, current.position);
+    await swapEntities(
+      { id: current.id, type: 'quantity' in current ? 'item' : 'group', position: current.position },
+      { id: neighbor.id, type: 'quantity' in neighbor ? 'item' : 'group', position: neighbor.position }
+    );
     refreshList();
   };
 
   const combinedRoot = [...(list.items || []), ...(list.groups || [])].sort((a, b) => a.position - b.position);
+
+  const filterEntity = (entity: Item | Group): boolean => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    
+    // Check if the current entity matches
+    if (entity.name.toLowerCase().includes(query)) return true;
+    
+    // If it's a group, check its children
+    if (!('quantity' in entity)) {
+      const g = entity as Group;
+      const hasMatchingChild = (g.children || []).some(child => filterEntity(child));
+      const hasMatchingItem = (g.items || []).some(item => item.name.toLowerCase().includes(query));
+      return hasMatchingChild || hasMatchingItem;
+    }
+    
+    return false;
+  };
+
+  const filteredRoot = combinedRoot.filter(entity => filterEntity(entity));
 
   return (
     <div style={{ padding: '2rem', flex: 1, overflowY: 'auto', color: 'var(--text-color)' }}>
@@ -414,15 +444,33 @@ export const ListDetailView = () => {
             {list.category}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={handleAddRootItem} className="primary-button" style={{ padding: '0.5rem 1rem' }}>+ Item</button>
-          <button onClick={handleAddRootGroup} className="primary-button" style={{ padding: '0.5rem 1rem' }}>+ Group</button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={handleAddRootItem} className="primary-button" style={{ padding: '0.5rem 1rem' }}>+ Item</button>
+            <button onClick={handleAddRootGroup} className="primary-button" style={{ padding: '0.5rem 1rem' }}>+ Group</button>
+          </div>
+          <input 
+            type="text" 
+            placeholder="Search items..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+            style={{ 
+              background: 'transparent', 
+              border: '1px solid var(--border-color)', 
+              borderRadius: '4px', 
+              padding: '0.5rem', 
+              color: 'var(--text-color)',
+              width: '250px',
+              marginTop: '0.5rem'
+            }}
+          />
         </div>
       </header>
       
       <div className="list-content" style={{ maxWidth: '800px' }}>
         <div style={{ marginBottom: '1rem' }}>
-          {combinedRoot.map((entity, index) => {
+          {filteredRoot.map((entity, index) => {
             const isItem = 'quantity' in entity;
             if (isItem) {
               return (
@@ -431,7 +479,7 @@ export const ListDetailView = () => {
                   item={entity as Item} 
                   onRefresh={refreshList}
                   canMoveUp={index > 0}
-                  canMoveDown={index < (combinedRoot.length - 1)}
+                  canMoveDown={index < (filteredRoot.length - 1)}
                   onMoveUp={() => handleMoveRoot(index, 'up', combinedRoot)}
                   onMoveDown={() => handleMoveRoot(index, 'down', combinedRoot)}
                 />
@@ -444,9 +492,10 @@ export const ListDetailView = () => {
                   listId={selectedListId} 
                   onRefresh={refreshList}
                   canMoveUp={index > 0}
-                  canMoveDown={index < (combinedRoot.length - 1)}
+                  canMoveDown={index < (filteredRoot.length - 1)}
                   onMoveUp={() => handleMoveRoot(index, 'up', combinedRoot)}
                   onMoveDown={() => handleMoveRoot(index, 'down', combinedRoot)}
+                  searchQuery={searchQuery}
                 />
               );
             }

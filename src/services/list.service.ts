@@ -234,5 +234,39 @@ export const listService = {
       distinct: ['category'],
     });
     return lists.map(l => l.category);
-  }
+  },
+
+  async swapPositions(
+    userId: string,
+    entity1: { id: string; type: "item" | "group"; position: number },
+    entity2: { id: string; type: "item" | "group"; position: number }
+  ) {
+    return prisma.$transaction(async (tx) => {
+      // Update entity 1
+      if (entity1.type === "item") {
+        await tx.item.update({
+          where: { id: entity1.id, list: { userId } },
+          data: { position: entity2.position },
+        });
+      } else {
+        await tx.group.update({
+          where: { id: entity1.id, list: { userId } },
+          data: { position: entity2.position },
+        });
+      }
+
+      // Update entity 2
+      if (entity2.type === "item") {
+        await tx.item.update({
+          where: { id: entity2.id, list: { userId } },
+          data: { position: entity1.position },
+        });
+      } else {
+        await tx.group.update({
+          where: { id: entity2.id, list: { userId } },
+          data: { position: entity1.position },
+        });
+      }
+    });
+  },
 };

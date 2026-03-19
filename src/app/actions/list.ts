@@ -50,3 +50,13 @@ export async function moveList(id: string, direction: 'up' | 'down') {
   await listService.updatePosition(session.user.id, id, direction);
   revalidatePath("/dashboard");
 }
+
+export async function swapEntities(
+  entity1: { id: string; type: "item" | "group"; position: number },
+  entity2: { id: string; type: "item" | "group"; position: number }
+) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  await listService.swapPositions(session.user.id, entity1, entity2);
+  revalidatePath("/dashboard");
+}
