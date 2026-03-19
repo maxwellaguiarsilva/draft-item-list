@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { Item, Group } from "@prisma/client";
 
 export const groupService = {
   async getByList(userId: string, listId: string) {
@@ -53,31 +54,41 @@ export const groupService = {
       include: { 
         list: true,
         items: true,
-        children: {
-          include: {
-            items: true,
-            children: true // This only goes one level deep in the include, 
-                           // but we'll handle recursion properly
-          }
-        }
       }
     });
 
     if (!sourceGroup || sourceGroup.list.userId !== userId) throw new Error("Unauthorized");
 
     return prisma.$transaction(async (tx) => {
-      const cloneGroupRecursive = async (group: { id: string; name: string; position: number; listId: string; items?: any[] }, parentId: string | null) => {
+      // Shift subsequent groups to make room
+      await tx.group.updateMany({
+        where: {
+          listId: sourceGroup.listId,
+          parentId: sourceGroup.parentId,
+          position: { gt: sourceGroup.position },
+        },
+        data: {
+          position: { increment: 1 },
+        },
+      });
+
+      const cloneGroupRecursive = async (
+        group: Group & { items?: Item[] }, 
+        parentId: string | null,
+        isRoot: boolean = false
+      ) => {
         const newGroup = await tx.group.create({
           data: {
-            name: `${group.name} (Copy)`,
-            position: group.position + 1,
+            name: isRoot ? `${group.name} (Copy)` : group.name,
+            position: isRoot ? group.position + 1 : group.position,
             listId: group.listId,
             parentId: parentId,
           },
         });
 
         // Clone items
-        for (const item of group.items || []) {
+        const items = group.items || await tx.item.findMany({ where: { groupId: group.id } });
+        for (const item of items) {
           await tx.item.create({
             data: {
               name: item.name,
@@ -102,7 +113,7 @@ export const groupService = {
         return newGroup;
       };
 
-      return await cloneGroupRecursive(sourceGroup, sourceGroup.parentId);
+      return await cloneGroupRecursive(sourceGroup, sourceGroup.parentId, true);
     });
   },
 

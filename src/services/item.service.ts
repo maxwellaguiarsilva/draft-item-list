@@ -52,14 +52,28 @@ export const itemService = {
     });
     if (!item || item.list.userId !== userId) throw new Error("Unauthorized");
 
-    return prisma.item.create({
-      data: {
-        name: `${item.name} (Copy)`,
-        quantity: item.quantity,
-        position: item.position + 1,
-        listId: item.listId,
-        groupId: item.groupId,
-      },
+    return prisma.$transaction(async (tx) => {
+      // Shift subsequent items to make room
+      await tx.item.updateMany({
+        where: {
+          listId: item.listId,
+          groupId: item.groupId,
+          position: { gt: item.position },
+        },
+        data: {
+          position: { increment: 1 },
+        },
+      });
+
+      return tx.item.create({
+        data: {
+          name: `${item.name} (Copy)`,
+          quantity: item.quantity,
+          position: item.position + 1,
+          listId: item.listId,
+          groupId: item.groupId,
+        },
+      });
     });
   },
 

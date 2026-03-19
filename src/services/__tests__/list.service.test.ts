@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { listService } from '../list.service';
 import { prisma } from '../../lib/prisma';
+import { List, Group, Item } from '@prisma/client';
 
 // Mock the prisma client
 vi.mock('../../lib/prisma', () => ({
@@ -18,10 +19,12 @@ vi.mock('../../lib/prisma', () => ({
     group: {
       findMany: vi.fn(),
       create: vi.fn(),
+      updateMany: vi.fn(),
     },
     item: {
       findMany: vi.fn(),
       create: vi.fn(),
+      updateMany: vi.fn(),
     },
     $transaction: vi.fn((callback) => callback(prisma)),
   },
@@ -35,7 +38,7 @@ describe('listService', () => {
   describe('getAll', () => {
     it('should return lists for a user ordered by position', async () => {
       const mockLists = [{ id: '1', name: 'Test List', userId: 'user-1', position: 0 }];
-      (prisma.list.findMany as any).mockResolvedValue(mockLists);
+      vi.mocked(prisma.list.findMany).mockResolvedValue(mockLists as unknown as List[]);
 
       const result = await listService.getAll('user-1');
       expect(result).toEqual(mockLists);
@@ -49,8 +52,8 @@ describe('listService', () => {
   describe('create', () => {
     it('should create a new list for a user with incremented position', async () => {
       const listData = { name: 'New List', category: 'Testing' };
-      (prisma.list.aggregate as any).mockResolvedValue({ _max: { position: 5 } });
-      (prisma.list.create as any).mockResolvedValue({ id: '2', ...listData, userId: 'user-1', position: 6 });
+      vi.mocked(prisma.list.aggregate).mockResolvedValue({ _max: { position: 5 } } as unknown as { _max: { position: number | null } });
+      vi.mocked(prisma.list.create).mockResolvedValue({ id: '2', ...listData, userId: 'user-1', position: 6 } as unknown as List);
 
       const result = await listService.create('user-1', listData);
       expect(result.position).toBe(6);
@@ -69,11 +72,12 @@ describe('listService', () => {
       const currentList = { id: 'l2', position: 2, userId: 'u1' };
       const otherList = { id: 'l1', position: 1, userId: 'u1' };
 
-      (prisma.list.findUnique as any).mockResolvedValue(currentList);
-      (prisma.list.findFirst as any).mockResolvedValue(otherList);
-      (prisma.list.update as any).mockImplementation(({ where }: any) => {
-        if (where.id === 'l2') return { ...currentList, position: 1 };
-        if (where.id === 'l1') return { ...otherList, position: 2 };
+      vi.mocked(prisma.list.findUnique).mockResolvedValue(currentList as unknown as List);
+      vi.mocked(prisma.list.findFirst).mockResolvedValue(otherList as unknown as List);
+      vi.mocked(prisma.list.update).mockImplementation(({ where }: { where: { id: string } }) => {
+        if (where.id === 'l2') return { ...currentList, position: 1 } as unknown as List;
+        if (where.id === 'l1') return { ...otherList, position: 2 } as unknown as List;
+        return null as unknown as List;
       });
 
       const result = await listService.updatePosition('u1', 'l2', 'up');
@@ -84,8 +88,8 @@ describe('listService', () => {
 
     it('should not do anything if no list is found in that direction', async () => {
         const currentList = { id: 'l1', position: 0, userId: 'u1' };
-        (prisma.list.findUnique as any).mockResolvedValue(currentList);
-        (prisma.list.findFirst as any).mockResolvedValue(null);
+        vi.mocked(prisma.list.findUnique).mockResolvedValue(currentList as unknown as List);
+        vi.mocked(prisma.list.findFirst).mockResolvedValue(null);
 
         const result = await listService.updatePosition('u1', 'l1', 'up');
         expect(result).toEqual(currentList);
@@ -102,9 +106,9 @@ describe('listService', () => {
       ];
       const mockRootItems = [{ id: 'ri1', name: 'RI1', position: 0, quantity: 2 }];
 
-      (prisma.list.findUnique as any).mockResolvedValue(mockList);
-      (prisma.group.findMany as any).mockResolvedValue(mockGroups);
-      (prisma.item.findMany as any).mockResolvedValue(mockRootItems);
+      vi.mocked(prisma.list.findUnique).mockResolvedValue(mockList as unknown as List);
+      vi.mocked(prisma.group.findMany).mockResolvedValue(mockGroups as unknown as (Group & { items: Item[] })[]);
+      vi.mocked(prisma.item.findMany).mockResolvedValue(mockRootItems as unknown as Item[]);
 
       const result = await listService.getListDetails('u1', 'l1');
 
@@ -126,13 +130,14 @@ describe('listService', () => {
        ];
        const mockRootItems = [{ id: 'ri1', name: 'RI1', position: 0, quantity: 1 }];
 
-       (prisma.list.findUnique as any).mockResolvedValue(mockSourceList);
-       (prisma.group.findMany as any).mockResolvedValue(mockGroups);
-       (prisma.item.findMany as any).mockResolvedValue(mockRootItems);
-       (prisma.list.create as any).mockResolvedValue({ id: 'new-l1', name: 'L1 (Copy)', position: 2 });
-       (prisma.group.create as any)
-         .mockResolvedValueOnce({ id: 'new-g1' })
-         .mockResolvedValueOnce({ id: 'new-g2' });
+       vi.mocked(prisma.list.findUnique).mockResolvedValue(mockSourceList as unknown as List);
+       vi.mocked(prisma.group.findMany).mockResolvedValue(mockGroups as unknown as (Group & { items: Item[] })[]);
+       vi.mocked(prisma.item.findMany).mockResolvedValue(mockRootItems as unknown as Item[]);
+       vi.mocked(prisma.list.create).mockResolvedValue({ id: 'new-l1', name: 'L1 (Copy)', position: 2 } as unknown as List);
+       vi.mocked(prisma.group.create)
+         .mockResolvedValueOnce({ id: 'new-g1' } as unknown as Group)
+         .mockResolvedValueOnce({ id: 'new-g2' } as unknown as Group);
+       vi.mocked(prisma.item.create).mockResolvedValue({ id: 'new-i1' } as unknown as Item);
 
        const result = await listService.duplicate('u1', 'l1');
 

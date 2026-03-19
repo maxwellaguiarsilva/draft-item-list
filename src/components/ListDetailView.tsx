@@ -98,9 +98,8 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown, canMo
   );
 };
 
-const ItemView = ({ item, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: {
+const ItemView = ({ item, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: {
   item: Item;
-  listId: string;
   onRefresh: () => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -110,20 +109,20 @@ const ItemView = ({ item, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, o
   const [isHovered, setIsHovered] = useState(false);
 
   const handleIncrement = async () => {
-    await updateItem(item.id, listId, { quantity: item.quantity + 1 });
+    await updateItem(item.id, { quantity: item.quantity + 1 });
     onRefresh();
   };
 
   const handleDecrement = async () => {
     if (item.quantity > 1) {
-      await updateItem(item.id, listId, { quantity: item.quantity - 1 });
+      await updateItem(item.id, { quantity: item.quantity - 1 });
       onRefresh();
     }
   };
 
   const handleDelete = async () => {
     if (confirm(`Delete item "${item.name}"?`)) {
-      await deleteItem(item.id, listId);
+      await deleteItem(item.id);
       onRefresh();
     }
   };
@@ -131,13 +130,13 @@ const ItemView = ({ item, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, o
   const handleRename = async () => {
     const newName = prompt("Enter new name:", item.name);
     if (newName && newName !== item.name) {
-      await updateItem(item.id, listId, { name: newName });
+      await updateItem(item.id, { name: newName });
       onRefresh();
     }
   };
 
   const handleDuplicate = async () => {
-    await duplicateItem(item.id, listId);
+    await duplicateItem(item.id);
     onRefresh();
   };
 
@@ -192,7 +191,7 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
 
   const handleDelete = async () => {
     if (confirm(`Delete group "${group.name}" and all its contents?`)) {
-      await deleteGroup(group.id, listId);
+      await deleteGroup(group.id);
       onRefresh();
     }
   };
@@ -200,13 +199,13 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
   const handleRename = async () => {
     const newName = prompt("Enter new group name:", group.name);
     if (newName && newName !== group.name) {
-      await updateGroup(group.id, listId, { name: newName });
+      await updateGroup(group.id, { name: newName });
       onRefresh();
     }
   };
 
   const handleDuplicate = async () => {
-    await duplicateGroup(group.id, listId);
+    await duplicateGroup(group.id);
     onRefresh();
   };
 
@@ -234,27 +233,25 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
     }
   };
 
-  const handleMoveItem = async (index: number, direction: 'up' | 'down') => {
-    const items = group.items || [];
+  const handleMoveInside = async (index: number, direction: 'up' | 'down', combined: (Item | Group)[]) => {
     const neighborIndex = direction === 'up' ? index - 1 : index + 1;
-    const item = items[index];
-    const neighbor = items[neighborIndex];
+    const current = combined[index];
+    const neighbor = combined[neighborIndex];
     
-    await updateItemPosition(item.id, listId, neighbor.position);
-    await updateItemPosition(neighbor.id, listId, item.position);
+    const updatePos = async (entity: Item | Group, newPos: number) => {
+      if ('quantity' in entity) {
+        await updateItemPosition(entity.id, newPos);
+      } else {
+        await updateGroupPosition(entity.id, newPos);
+      }
+    };
+
+    await updatePos(current, neighbor.position);
+    await updatePos(neighbor, current.position);
     onRefresh();
   };
 
-  const handleMoveChildGroup = async (index: number, direction: 'up' | 'down') => {
-    const children = group.children || [];
-    const neighborIndex = direction === 'up' ? index - 1 : index + 1;
-    const child = children[index];
-    const neighbor = children[neighborIndex];
-    
-    await updateGroupPosition(child.id, listId, neighbor.position);
-    await updateGroupPosition(neighbor.id, listId, child.position);
-    onRefresh();
-  };
+  const combined = [...(group.items || []), ...(group.children || [])].sort((a, b) => a.position - b.position);
 
   return (
     <div 
@@ -289,33 +286,37 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
         </div>
       </div>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {group.items?.map((item: Item, index: number) => (
-          <ItemView 
-            key={item.id} 
-            item={item} 
-            listId={listId} 
-            onRefresh={onRefresh}
-            canMoveUp={index > 0}
-            canMoveDown={index < (group.items!.length - 1)}
-            onMoveUp={() => handleMoveItem(index, 'up')}
-            onMoveDown={() => handleMoveItem(index, 'down')}
-          />
-        ))}
-      </ul>
-      
-      {group.children?.map((child: Group, index: number) => (
-        <GroupView 
-          key={child.id} 
-          group={child} 
-          listId={listId} 
-          onRefresh={onRefresh}
-          canMoveUp={index > 0}
-          canMoveDown={index < (group.children!.length - 1)}
-          onMoveUp={() => handleMoveChildGroup(index, 'up')}
-          onMoveDown={() => handleMoveChildGroup(index, 'down')}
-        />
-      ))}
+      <div style={{ padding: 0 }}>
+        {combined.map((entity, index) => {
+          const isItem = 'quantity' in entity;
+          if (isItem) {
+            return (
+              <ItemView 
+                key={entity.id} 
+                item={entity as Item} 
+                onRefresh={onRefresh}
+                canMoveUp={index > 0}
+                canMoveDown={index < (combined.length - 1)}
+                onMoveUp={() => handleMoveInside(index, 'up', combined)}
+                onMoveDown={() => handleMoveInside(index, 'down', combined)}
+              />
+            );
+          } else {
+            return (
+              <GroupView 
+                key={entity.id} 
+                group={entity as Group} 
+                listId={listId} 
+                onRefresh={onRefresh}
+                canMoveUp={index > 0}
+                canMoveDown={index < (combined.length - 1)}
+                onMoveUp={() => handleMoveInside(index, 'up', combined)}
+                onMoveDown={() => handleMoveInside(index, 'down', combined)}
+              />
+            );
+          }
+        })}
+      </div>
     </div>
   );
 };
@@ -324,6 +325,19 @@ export const ListDetailView = () => {
   const { selectedListId } = useAppContext();
   const [list, setList] = useState<List | null>(null);
   const [loading, setLoading] = useState(false);
+  const [prevId, setPrevId] = useState<string | null>(null);
+
+  // Set loading state during render if the ID changed to avoid synchronous effect updates
+  if (selectedListId !== prevId) {
+    setPrevId(selectedListId);
+    if (selectedListId) {
+      setLoading(true);
+      setList(null);
+    } else {
+      setLoading(false);
+      setList(null);
+    }
+  }
 
   const refreshList = () => {
     if (selectedListId) {
@@ -334,7 +348,6 @@ export const ListDetailView = () => {
   useEffect(() => {
     let isMounted = true;
     if (selectedListId) {
-      setLoading(true);
       getListDetails(selectedListId)
         .then((data) => {
           if (isMounted) setList(data as unknown as List);
@@ -342,8 +355,6 @@ export const ListDetailView = () => {
         .finally(() => {
           if (isMounted) setLoading(false);
         });
-    } else {
-      setList(null);
     }
     return () => { isMounted = false; };
   }, [selectedListId]);
@@ -374,27 +385,25 @@ export const ListDetailView = () => {
     }
   };
 
-  const handleMoveRootItem = async (index: number, direction: 'up' | 'down') => {
-    const items = list.items;
+  const handleMoveRoot = async (index: number, direction: 'up' | 'down', combined: (Item | Group)[]) => {
     const neighborIndex = direction === 'up' ? index - 1 : index + 1;
-    const item = items[index];
-    const neighbor = items[neighborIndex];
+    const current = combined[index];
+    const neighbor = combined[neighborIndex];
     
-    await updateItemPosition(item.id, selectedListId, neighbor.position);
-    await updateItemPosition(neighbor.id, selectedListId, item.position);
+    const updatePos = async (entity: Item | Group, newPos: number) => {
+      if ('quantity' in entity) {
+        await updateItemPosition(entity.id, newPos);
+      } else {
+        await updateGroupPosition(entity.id, newPos);
+      }
+    };
+
+    await updatePos(current, neighbor.position);
+    await updatePos(neighbor, current.position);
     refreshList();
   };
 
-  const handleMoveRootGroup = async (index: number, direction: 'up' | 'down') => {
-    const groups = list.groups;
-    const neighborIndex = direction === 'up' ? index - 1 : index + 1;
-    const group = groups[index];
-    const neighbor = groups[neighborIndex];
-    
-    await updateGroupPosition(group.id, selectedListId, neighbor.position);
-    await updateGroupPosition(neighbor.id, selectedListId, group.position);
-    refreshList();
-  };
+  const combinedRoot = [...(list.items || []), ...(list.groups || [])].sort((a, b) => a.position - b.position);
 
   return (
     <div style={{ padding: '2rem', flex: 1, overflowY: 'auto', color: 'var(--text-color)' }}>
@@ -412,35 +421,37 @@ export const ListDetailView = () => {
       </header>
       
       <div className="list-content" style={{ maxWidth: '800px' }}>
-        {/* Root Items */}
-        <ul style={{ listStyle: 'none', padding: 0, marginBottom: '1rem' }}>
-          {list.items?.map((item: Item, index: number) => (
-            <ItemView 
-                key={item.id} 
-                item={item} 
-                listId={selectedListId} 
-                onRefresh={refreshList}
-                canMoveUp={index > 0}
-                canMoveDown={index < (list.items.length - 1)}
-                onMoveUp={() => handleMoveRootItem(index, 'up')}
-                onMoveDown={() => handleMoveRootItem(index, 'down')}
-            />
-          ))}
-        </ul>
-
-        {/* Groups */}
-        {list.groups?.map((group: Group, index: number) => (
-          <GroupView 
-            key={group.id} 
-            group={group} 
-            listId={selectedListId} 
-            onRefresh={refreshList} 
-            canMoveUp={index > 0}
-            canMoveDown={index < (list.groups.length - 1)}
-            onMoveUp={() => handleMoveRootGroup(index, 'up')}
-            onMoveDown={() => handleMoveRootGroup(index, 'down')}
-          />
-        ))}
+        <div style={{ marginBottom: '1rem' }}>
+          {combinedRoot.map((entity, index) => {
+            const isItem = 'quantity' in entity;
+            if (isItem) {
+              return (
+                <ItemView 
+                  key={entity.id} 
+                  item={entity as Item} 
+                  onRefresh={refreshList}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < (combinedRoot.length - 1)}
+                  onMoveUp={() => handleMoveRoot(index, 'up', combinedRoot)}
+                  onMoveDown={() => handleMoveRoot(index, 'down', combinedRoot)}
+                />
+              );
+            } else {
+              return (
+                <GroupView 
+                  key={entity.id} 
+                  group={entity as Group} 
+                  listId={selectedListId} 
+                  onRefresh={refreshList}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < (combinedRoot.length - 1)}
+                  onMoveUp={() => handleMoveRoot(index, 'up', combinedRoot)}
+                  onMoveDown={() => handleMoveRoot(index, 'down', combinedRoot)}
+                />
+              );
+            }
+          })}
+        </div>
       </div>
     </div>
   );

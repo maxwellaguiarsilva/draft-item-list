@@ -1,4 +1,18 @@
 import { prisma } from "../lib/prisma";
+import { Group, Item, List } from "@prisma/client";
+
+export type GroupWithItems = Group & {
+  items: Item[];
+};
+
+export type GroupTreeItem = GroupWithItems & {
+  children: GroupTreeItem[];
+};
+
+export type ListDetails = List & {
+  groups: GroupTreeItem[];
+  items: Item[];
+};
 
 export const listService = {
   async getAll(userId: string) {
@@ -72,7 +86,7 @@ export const listService = {
     });
   },
 
-  async getListDetails(userId: string, id: string) {
+  async getListDetails(userId: string, id: string): Promise<ListDetails | null> {
     const list = await prisma.list.findUnique({
       where: { id, userId },
     });
@@ -91,14 +105,14 @@ export const listService = {
     });
 
     // Build group tree in memory
-    const groupMap = new Map();
+    const groupMap = new Map<string, GroupTreeItem>();
     allGroups.forEach((group) => {
       groupMap.set(group.id, { ...group, children: [] });
     });
 
-    const rootGroups: (typeof allGroups[0] & { children: any[] })[] = [];
+    const rootGroups: GroupTreeItem[] = [];
     allGroups.forEach((group) => {
-      const mappedGroup = groupMap.get(group.id);
+      const mappedGroup = groupMap.get(group.id)!;
       if (group.parentId) {
         const parent = groupMap.get(group.parentId);
         if (parent) {
@@ -116,7 +130,7 @@ export const listService = {
       ...list,
       groups: rootGroups,
       items: rootItems,
-    };
+    } as ListDetails;
   },
 
   async duplicate(userId: string, id: string) {
