@@ -44,4 +44,35 @@ export const itemService = {
       where: { id },
     });
   },
+
+  async duplicate(userId: string, id: string) {
+    const item = await prisma.item.findUnique({
+      where: { id },
+      include: { list: true }
+    });
+    if (!item || item.list.userId !== userId) throw new Error("Unauthorized");
+
+    return prisma.item.create({
+      data: {
+        name: `${item.name} (Copy)`,
+        quantity: item.quantity,
+        position: item.position + 1,
+        listId: item.listId,
+        groupId: item.groupId,
+      },
+    });
+  },
+
+  async updatePosition(userId: string, id: string, newPosition: number) {
+    const item = await prisma.item.findUnique({
+      where: { id },
+      include: { list: true }
+    });
+    if (!item || item.list.userId !== userId) throw new Error("Unauthorized");
+
+    return prisma.item.update({
+      where: { id },
+      data: { position: newPosition },
+    });
+  },
 };

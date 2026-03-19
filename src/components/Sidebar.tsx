@@ -1,13 +1,71 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { deleteList, duplicateList } from '../app/actions/list';
+import { deleteList, duplicateList, updateList } from '../app/actions/list';
 import { ListForm } from './ListForm';
+
+const EditMenu = ({ onRename, onDelete, onDuplicate }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div style={{ position: 'relative' }} ref={menuRef}>
+      <button 
+        className="icon-button"
+        style={{ fontSize: '1rem' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+      >
+        ⋮
+      </button>
+      {isOpen && (
+        <div className="menu-popup" style={{ right: 0, top: '100%', zIndex: 100 }}>
+          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onRename(); setIsOpen(false); }}>Rename</button>
+          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onDuplicate(); setIsOpen(false); }}>Duplicate</button>
+          <button className="menu-item danger" onClick={(e) => { e.stopPropagation(); onDelete(); setIsOpen(false); }}>Delete</button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Sidebar = ({ lists }: { lists: any[] }) => {
   const { selectedListId, setSelectedListId, isSidebarOpen, toggleSidebar } = useAppContext();
-  const [editingId, setEditingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedListId && lists.length > 0) {
+      setSelectedListId(lists[0].id);
+    }
+  }, [lists, selectedListId, setSelectedListId]);
+
+  const handleRename = async (list: any) => {
+    const newName = prompt("Enter new list name:", list.name);
+    if (newName && newName !== list.name) {
+      await updateList(list.id, { name: newName });
+    }
+  };
+
+  const handleDelete = async (list: any) => {
+    if (confirm(`Delete list "${list.name}"?`)) {
+      await deleteList(list.id);
+      if (selectedListId === list.id) {
+        setSelectedListId(null);
+      }
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -27,43 +85,14 @@ export const Sidebar = ({ lists }: { lists: any[] }) => {
                 className={`list-item ${selectedListId === list.id ? 'selected' : ''}`}
                 onClick={() => setSelectedListId(list.id)}
               >
-                <span>{list.name}</span>
-                <div style={{ position: 'relative' }}>
-                  <button
-                    className="icon-button"
-                    style={{ fontSize: '1rem' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingId(editingId === list.id ? null : list.id);
-                    }}
-                  >
-                    ⋮
-                  </button>
-                  {editingId === list.id && (
-                    <div className="menu-popup">
-                      <button
-                        className="menu-item"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          duplicateList(list.id);
-                          setEditingId(null);
-                        }}
-                      >
-                        Duplicate
-                      </button>
-                      <button
-                        className="menu-item danger"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteList(list.id);
-                          setEditingId(null);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {list.name}
+                </span>
+                <EditMenu 
+                    onRename={() => handleRename(list)}
+                    onDuplicate={() => duplicateList(list.id)}
+                    onDelete={() => handleDelete(list)}
+                />
               </li>
             ))}
           </ul>

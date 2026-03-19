@@ -25,8 +25,21 @@ export async function deleteList(id: string) {
   revalidatePath("/dashboard");
 }
 
+export async function updateList(id: string, data: { name?: string; category?: string }) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  await listService.update(session.user.id, id, data);
+  revalidatePath("/dashboard");
+}
+
 export async function getListDetails(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
   return await listService.getListDetails(session.user.id, id);
+}
+
+export async function getCategories() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return await listService.getCategories(session.user.id);
 }

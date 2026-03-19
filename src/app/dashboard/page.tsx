@@ -10,7 +10,16 @@ export default async function DashboardPage() {
     redirect("/api/auth/signin");
   }
 
-  const lists = await listService.getAll(session.user.id);
+  let lists = await listService.getAll(session.user.id);
+
+  if (lists.length === 0) {
+    // Onboarding: create default list
+    await listService.create(session.user.id, {
+      name: "My First List",
+      category: "General",
+    });
+    lists = await listService.getAll(session.user.id);
+  }
 
   return (
     <div className="dashboard-container">

@@ -24,3 +24,17 @@ export async function deleteGroup(id: string, listId: string) {
   await groupService.delete(session.user.id, id);
   revalidatePath(`/dashboard`);
 }
+
+export async function duplicateGroup(id: string, listId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  await groupService.duplicate(session.user.id, id);
+  revalidatePath(`/dashboard`);
+}
+
+export async function updateGroupPosition(id: string, listId: string, newPosition: number) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  await groupService.updatePosition(session.user.id, id, newPosition);
+  revalidatePath(`/dashboard`);
+}
