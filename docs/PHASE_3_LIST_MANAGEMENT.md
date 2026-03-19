@@ -12,9 +12,9 @@ To support both the Web UI and potential MCP/API access, the business logic will
 
 ## Component Architecture (Vanilla CSS)
 - **`Dashboard` (`/dashboard`)**: Lists all managed lists.
-- **`ListContainer`**: Orchestrates the view of a specific list, its groups, and top-level items.
-- **`GroupNode`**: Recursive component for hierarchical group structure.
-- **`ItemRow`**: Atomic unit for item management (quantity, name).
+- **`ListDetailView`**: Orchestrates the view of a specific list, its groups, and top-level items.
+- **`GroupView`**: Recursive component for hierarchical group structure.
+- **`ItemView`**: Atomic unit for item management (quantity, name).
 
 ## Development Roadmap
 1.  **Setup Infrastructure**: Create `src/services/` and `src/app/dashboard/` skeleton.

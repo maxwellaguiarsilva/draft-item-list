@@ -5,7 +5,7 @@ import { createList, getCategories } from "../app/actions/list";
 
 export function ListForm() {
   const [categories, setCategories] = useState<string[]>([]);
-  const [state, action, pending] = useActionState(async (prevState: any, formData: FormData) => {
+  const [, action, pending] = useActionState(async (_prevState: unknown, formData: FormData) => {
     const name = formData.get("name") as string;
     const category = formData.get("category") as string;
     if (!name || !category) return;

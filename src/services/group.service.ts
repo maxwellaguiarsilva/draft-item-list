@@ -66,7 +66,7 @@ export const groupService = {
     if (!sourceGroup || sourceGroup.list.userId !== userId) throw new Error("Unauthorized");
 
     return prisma.$transaction(async (tx) => {
-      const cloneGroupRecursive = async (group: any, parentId: string | null) => {
+      const cloneGroupRecursive = async (group: { id: string; name: string; position: number; listId: string; items?: any[] }, parentId: string | null) => {
         const newGroup = await tx.group.create({
           data: {
             name: `${group.name} (Copy)`,

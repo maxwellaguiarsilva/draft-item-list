@@ -6,7 +6,38 @@ import { getListDetails } from '../app/actions/list';
 import { updateItem, deleteItem, createItem, duplicateItem, updateItemPosition } from '../app/actions/item';
 import { updateGroup, deleteGroup, createGroup, duplicateGroup, updateGroupPosition } from '../app/actions/group';
 
-const IconButton = ({ children, onClick, className = "", style = {}, disabled = false, title = "" }: any) => (
+interface Item {
+  id: string;
+  name: string;
+  quantity: number;
+  position: number;
+  groupId: string | null;
+}
+
+interface Group {
+  id: string;
+  name: string;
+  position: number;
+  items?: Item[];
+  children?: Group[];
+}
+
+interface List {
+  id: string;
+  name: string;
+  category: string;
+  items: Item[];
+  groups: Group[];
+}
+
+const IconButton = ({ children, onClick, className = "", style = {}, disabled = false, title = "" }: { 
+  children: React.ReactNode, 
+  onClick: (e: React.MouseEvent) => void, 
+  className?: string, 
+  style?: React.CSSProperties, 
+  disabled?: boolean, 
+  title?: string 
+}) => (
   <button 
     onClick={(e) => { e.stopPropagation(); onClick(e); }} 
     className={`icon-button ${className}`} 
@@ -29,7 +60,15 @@ const IconButton = ({ children, onClick, className = "", style = {}, disabled = 
   </button>
 );
 
-const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown, canMoveUp, canMoveDown }: any) => {
+const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown, canMoveUp, canMoveDown }: {
+  onRename: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +98,15 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown, canMo
   );
 };
 
-const ItemView = ({ item, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: any) => {
+const ItemView = ({ item, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: {
+  item: Item;
+  listId: string;
+  onRefresh: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleIncrement = async () => {
@@ -132,7 +179,15 @@ const ItemView = ({ item, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, o
   );
 };
 
-const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: any) => {
+const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: {
+  group: Group;
+  listId: string;
+  onRefresh: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleDelete = async () => {
@@ -180,7 +235,7 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
   };
 
   const handleMoveItem = async (index: number, direction: 'up' | 'down') => {
-    const items = group.items;
+    const items = group.items || [];
     const neighborIndex = direction === 'up' ? index - 1 : index + 1;
     const item = items[index];
     const neighbor = items[neighborIndex];
@@ -191,7 +246,7 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
   };
 
   const handleMoveChildGroup = async (index: number, direction: 'up' | 'down') => {
-    const children = group.children;
+    const children = group.children || [];
     const neighborIndex = direction === 'up' ? index - 1 : index + 1;
     const child = children[index];
     const neighbor = children[neighborIndex];
@@ -235,28 +290,28 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
       </div>
 
       <ul style={{ listStyle: 'none', padding: 0 }}>
-        {group.items?.map((item: any, index: number) => (
+        {group.items?.map((item: Item, index: number) => (
           <ItemView 
             key={item.id} 
             item={item} 
             listId={listId} 
             onRefresh={onRefresh}
             canMoveUp={index > 0}
-            canMoveDown={index < (group.items.length - 1)}
+            canMoveDown={index < (group.items!.length - 1)}
             onMoveUp={() => handleMoveItem(index, 'up')}
             onMoveDown={() => handleMoveItem(index, 'down')}
           />
         ))}
       </ul>
       
-      {group.children?.map((child: any, index: number) => (
+      {group.children?.map((child: Group, index: number) => (
         <GroupView 
           key={child.id} 
           group={child} 
           listId={listId} 
           onRefresh={onRefresh}
           canMoveUp={index > 0}
-          canMoveDown={index < (group.children.length - 1)}
+          canMoveDown={index < (group.children!.length - 1)}
           onMoveUp={() => handleMoveChildGroup(index, 'up')}
           onMoveDown={() => handleMoveChildGroup(index, 'down')}
         />
@@ -267,24 +322,30 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
 
 export const ListDetailView = () => {
   const { selectedListId } = useAppContext();
-  const [list, setList] = useState<any>(null);
+  const [list, setList] = useState<List | null>(null);
   const [loading, setLoading] = useState(false);
 
   const refreshList = () => {
     if (selectedListId) {
-      getListDetails(selectedListId).then(setList);
+      getListDetails(selectedListId).then((data) => setList(data as unknown as List));
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
     if (selectedListId) {
       setLoading(true);
       getListDetails(selectedListId)
-        .then(setList)
-        .finally(() => setLoading(false));
+        .then((data) => {
+          if (isMounted) setList(data as unknown as List);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
     } else {
       setList(null);
     }
+    return () => { isMounted = false; };
   }, [selectedListId]);
 
   if (!selectedListId) return <div style={{ padding: '2rem', color: 'var(--text-color)' }}>Select a list from the sidebar.</div>;
@@ -353,7 +414,7 @@ export const ListDetailView = () => {
       <div className="list-content" style={{ maxWidth: '800px' }}>
         {/* Root Items */}
         <ul style={{ listStyle: 'none', padding: 0, marginBottom: '1rem' }}>
-          {list.items?.map((item: any, index: number) => (
+          {list.items?.map((item: Item, index: number) => (
             <ItemView 
                 key={item.id} 
                 item={item} 
@@ -368,7 +429,7 @@ export const ListDetailView = () => {
         </ul>
 
         {/* Groups */}
-        {list.groups?.map((group: any, index: number) => (
+        {list.groups?.map((group: Group, index: number) => (
           <GroupView 
             key={group.id} 
             group={group} 

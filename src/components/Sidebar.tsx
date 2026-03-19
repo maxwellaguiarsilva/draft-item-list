@@ -2,10 +2,23 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { deleteList, duplicateList, updateList } from '../app/actions/list';
+import { deleteList, duplicateList, updateList, moveList } from '../app/actions/list';
 import { ListForm } from './ListForm';
 
-const EditMenu = ({ onRename, onDelete, onDuplicate }: any) => {
+interface List {
+  id: string;
+  name: string;
+  category: string;
+  position: number;
+}
+
+const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown }: {
+  onRename: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +48,8 @@ const EditMenu = ({ onRename, onDelete, onDuplicate }: any) => {
         <div className="menu-popup" style={{ right: 0, top: '100%', zIndex: 100 }}>
           <button className="menu-item" onClick={(e) => { e.stopPropagation(); onRename(); setIsOpen(false); }}>Rename</button>
           <button className="menu-item" onClick={(e) => { e.stopPropagation(); onDuplicate(); setIsOpen(false); }}>Duplicate</button>
+          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onMoveUp(); setIsOpen(false); }}>Move Up</button>
+          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onMoveDown(); setIsOpen(false); }}>Move Down</button>
           <button className="menu-item danger" onClick={(e) => { e.stopPropagation(); onDelete(); setIsOpen(false); }}>Delete</button>
         </div>
       )}
@@ -42,7 +57,7 @@ const EditMenu = ({ onRename, onDelete, onDuplicate }: any) => {
   );
 };
 
-export const Sidebar = ({ lists }: { lists: any[] }) => {
+export const Sidebar = ({ lists }: { lists: List[] }) => {
   const { selectedListId, setSelectedListId, isSidebarOpen, toggleSidebar } = useAppContext();
 
   useEffect(() => {
@@ -51,14 +66,14 @@ export const Sidebar = ({ lists }: { lists: any[] }) => {
     }
   }, [lists, selectedListId, setSelectedListId]);
 
-  const handleRename = async (list: any) => {
+  const handleRename = async (list: List) => {
     const newName = prompt("Enter new list name:", list.name);
     if (newName && newName !== list.name) {
       await updateList(list.id, { name: newName });
     }
   };
 
-  const handleDelete = async (list: any) => {
+  const handleDelete = async (list: List) => {
     if (confirm(`Delete list "${list.name}"?`)) {
       await deleteList(list.id);
       if (selectedListId === list.id) {
@@ -91,6 +106,8 @@ export const Sidebar = ({ lists }: { lists: any[] }) => {
                 <EditMenu 
                     onRename={() => handleRename(list)}
                     onDuplicate={() => duplicateList(list.id)}
+                    onMoveUp={() => moveList(list.id, 'up')}
+                    onMoveDown={() => moveList(list.id, 'down')}
                     onDelete={() => handleDelete(list)}
                 />
               </li>

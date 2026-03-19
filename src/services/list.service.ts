@@ -4,15 +4,23 @@ export const listService = {
   async getAll(userId: string) {
     return prisma.list.findMany({
       where: { userId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { position: "asc" },
     });
   },
 
   async create(userId: string, data: { name: string; category: string }) {
+    const maxPosition = await prisma.list.aggregate({
+      where: { userId },
+      _max: { position: true },
+    });
+
+    const newPosition = (maxPosition._max.position ?? -1) + 1;
+
     return prisma.list.create({
       data: {
         ...data,
         userId,
+        position: newPosition,
       },
     });
   },
@@ -23,10 +31,44 @@ export const listService = {
     });
   },
 
-  async update(userId: string, id: string, data: { name?: string; category?: string }) {
+  async update(userId: string, id: string, data: { name?: string; category?: string; position?: number }) {
     return prisma.list.update({
       where: { id, userId },
       data,
+    });
+  },
+
+  async updatePosition(userId: string, id: string, direction: 'up' | 'down') {
+    const currentList = await prisma.list.findUnique({
+      where: { id, userId },
+    });
+
+    if (!currentList) throw new Error("List not found");
+
+    const otherList = await prisma.list.findFirst({
+      where: {
+        userId,
+        position: direction === 'up' ? { lt: currentList.position } : { gt: currentList.position },
+      },
+      orderBy: {
+        position: direction === 'up' ? 'desc' : 'asc',
+      },
+    });
+
+    if (!otherList) return currentList;
+
+    return prisma.$transaction(async (tx) => {
+      const updatedList = await tx.list.update({
+        where: { id: currentList.id },
+        data: { position: otherList.position },
+      });
+
+      await tx.list.update({
+        where: { id: otherList.id },
+        data: { position: currentList.position },
+      });
+
+      return updatedList;
     });
   },
 
@@ -54,7 +96,7 @@ export const listService = {
       groupMap.set(group.id, { ...group, children: [] });
     });
 
-    const rootGroups: any[] = [];
+    const rootGroups: (typeof allGroups[0] & { children: any[] })[] = [];
     allGroups.forEach((group) => {
       const mappedGroup = groupMap.get(group.id);
       if (group.parentId) {
@@ -94,11 +136,23 @@ export const listService = {
     });
 
     return prisma.$transaction(async (tx) => {
+      // Shift other lists to make room for the new duplicate
+      await tx.list.updateMany({
+        where: {
+          userId,
+          position: { gt: sourceList.position },
+        },
+        data: {
+          position: { increment: 1 },
+        },
+      });
+
       const newList = await tx.list.create({
         data: {
           name: `${sourceList.name} (Copy)`,
           category: sourceList.category,
           userId,
+          position: sourceList.position + 1,
         },
       });
 

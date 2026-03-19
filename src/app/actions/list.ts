@@ -43,3 +43,10 @@ export async function getCategories() {
   if (!session?.user?.id) throw new Error("Unauthorized");
   return await listService.getCategories(session.user.id);
 }
+
+export async function moveList(id: string, direction: 'up' | 'down') {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  await listService.updatePosition(session.user.id, id, direction);
+  revalidatePath("/dashboard");
+}

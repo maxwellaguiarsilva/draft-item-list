@@ -60,6 +60,7 @@ model List {
   id        String   @id @default(cuid())
   name      String
   category  String
+  position  Int      @default(0)
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   groups    Group[]

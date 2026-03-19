@@ -20,7 +20,9 @@ The project has undergone a significant refactoring to address previous logic an
     - **Categorização:** `ListForm` now includes a `datalist` to select existing categories or create new ones.
     - **Contadores de Quantidade:** Implemented `+` and `-` buttons in `ItemView` with a minimum value of 1.
     - **Edit Mode:** Implemented hover-based menus for all entities (List, Group, Item) supporting Rename, Duplicate, Reorder (Move Up/Down), and Delete.
-    - **Testing:** Integrated **Vitest** and added unit tests for `list.service.ts` validating tree construction and deep cloning.
+    - **Reorder Logic for Lists:** Added `position` field to `List` model and implemented reordering in the Sidebar with "Move Up" and "Move Down" support.
+    - **Testing:** Integrated **Vitest** and added unit tests for `list.service.ts` validating tree construction, deep cloning, and position management.
+    - **Code Quality:** Refactored UI components (`ListDetailView`, `Sidebar`, `ListForm`) to use proper TypeScript interfaces, removing `any` types and improving type safety. Resolved major linting issues.
     - **Vanilla CSS:** Maintained 100% compliance with custom CSS variables and dark mode.
 
 ### Current Status
@@ -30,5 +32,5 @@ The project has undergone a significant refactoring to address previous logic an
 
 ### Next Steps
 1. **Frontend Testing:** Add UI tests for components using `@testing-library/react`.
-2. **Reorder Logic for Lists:** Add `position` field to `List` model and implement reordering in the Sidebar.
-3. **Mobile Optimization:** Further refine "Edit Mode" for mobile devices (long-press support).
+2. **Mobile Optimization:** Further refine "Edit Mode" for mobile devices (long-press support).
+3. **Mixed-Type Reordering:** Refactor `ListDetailView` to support reordering between Items and Groups seamlessly.
