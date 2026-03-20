@@ -13,7 +13,10 @@ export function ListForm() {
   }, null);
 
   useEffect(() => {
-    getCategories().then(setCategories);
+    getCategories().then((result) => {
+      if (result.success) setCategories(result.data as string[]);
+      else console.error(result.error);
+    });
   }, []);
 
   return (

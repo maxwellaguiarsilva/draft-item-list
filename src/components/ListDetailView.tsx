@@ -357,7 +357,10 @@ export const ListDetailView = () => {
 
   const refreshList = () => {
     if (selectedListId) {
-      getListDetails(selectedListId).then((data) => setList(data as unknown as List));
+      getListDetails(selectedListId).then((result) => {
+        if (result.success) setList(result.data as List);
+        else console.error(result.error);
+      });
     }
   };
 
@@ -365,8 +368,11 @@ export const ListDetailView = () => {
     let isMounted = true;
     if (selectedListId) {
       getListDetails(selectedListId)
-        .then((data) => {
-          if (isMounted) setList(data as unknown as List);
+        .then((result) => {
+          if (isMounted) {
+            if (result.success) setList(result.data as List);
+            else console.error(result.error);
+          }
         })
         .finally(() => {
           if (isMounted) setLoading(false);

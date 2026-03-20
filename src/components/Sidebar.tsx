@@ -69,13 +69,13 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
   const handleRename = async (list: List) => {
     const newName = prompt("Enter new list name:", list.name);
     if (newName && newName !== list.name) {
-      await updateList(list.id, { name: newName });
+      await updateList(list.id, { name: newName }).then(r => r.success || console.error(r.error));
     }
   };
 
   const handleDelete = async (list: List) => {
     if (confirm(`Delete list "${list.name}"?`)) {
-      await deleteList(list.id);
+      await deleteList(list.id).then(r => r.success || console.error(r.error));
       if (selectedListId === list.id) {
         setSelectedListId(null);
       }
@@ -105,9 +105,9 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
                 </span>
                 <EditMenu 
                     onRename={() => handleRename(list)}
-                    onDuplicate={() => duplicateList(list.id)}
-                    onMoveUp={() => moveList(list.id, 'up')}
-                    onMoveDown={() => moveList(list.id, 'down')}
+                    onDuplicate={() => duplicateList(list.id).then(r => r.success || console.error(r.error))}
+                    onMoveUp={() => moveList(list.id, 'up').then(r => r.success || console.error(r.error))}
+                    onMoveDown={() => moveList(list.id, 'down').then(r => r.success || console.error(r.error))}
                     onDelete={() => handleDelete(list)}
                 />
               </li>
