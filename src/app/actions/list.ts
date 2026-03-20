@@ -1,62 +1,47 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "../../auth";
+import { withAuth } from "@/lib/action-utils";
 import { listService } from "../../services/list.service";
 
-export async function createList(data: { name: string; category: string }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await listService.create(session.user.id, data);
+export const createList = withAuth(async (userId, data: { name: string; category: string }) => {
+  await listService.create(userId, data);
   revalidatePath("/dashboard");
-}
+});
 
-export async function duplicateList(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await listService.duplicate(session.user.id, id);
+export const duplicateList = withAuth(async (userId, id: string) => {
+  await listService.duplicate(userId, id);
   revalidatePath("/dashboard");
-}
+});
 
-export async function deleteList(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await listService.delete(session.user.id, id);
+export const deleteList = withAuth(async (userId, id: string) => {
+  await listService.delete(userId, id);
   revalidatePath("/dashboard");
-}
+});
 
-export async function updateList(id: string, data: { name?: string; category?: string }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await listService.update(session.user.id, id, data);
+export const updateList = withAuth(async (userId, id: string, data: { name?: string; category?: string }) => {
+  await listService.update(userId, id, data);
   revalidatePath("/dashboard");
-}
+});
 
-export async function getListDetails(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  return await listService.getListDetails(session.user.id, id);
-}
+export const getListDetails = withAuth(async (userId, id: string) => {
+  return await listService.getListDetails(userId, id);
+});
 
-export async function getCategories() {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  return await listService.getCategories(session.user.id);
-}
+export const getCategories = withAuth(async (userId) => {
+  return await listService.getCategories(userId);
+});
 
-export async function moveList(id: string, direction: 'up' | 'down') {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await listService.updatePosition(session.user.id, id, direction);
+export const moveList = withAuth(async (userId, id: string, direction: 'up' | 'down') => {
+  await listService.updatePosition(userId, id, direction);
   revalidatePath("/dashboard");
-}
+});
 
-export async function swapEntities(
+export const swapEntities = withAuth(async (
+  userId,
   entity1: { id: string; type: "item" | "group"; position: number },
   entity2: { id: string; type: "item" | "group"; position: number }
-) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await listService.swapPositions(session.user.id, entity1, entity2);
+) => {
+  await listService.swapPositions(userId, entity1, entity2);
   revalidatePath("/dashboard");
-}
+});
