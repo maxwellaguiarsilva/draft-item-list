@@ -1,5 +1,10 @@
 # Project Status Summary
 
+## 🚨 Critical Technical Debt (Highest Priority)
+- **UI Error Handling & Notification System:** Current implementation uses `console.error` as a stopgap placeholder for Server Action failures.
+    - **Proposed Solution:** Implement a global Notification system (using a Toast UI pattern, but abstracted). 
+    - **Implementation Strategy:** Create a custom hook `useAppAction` to encapsulate Server Action execution, automatically handling the `Result` type, triggering notifications for failures, and ensuring consistent type-safe interaction without bloating components with `if (result.success)` logic.
+
 ## Current Phase: Phase 3 (List Management UI) - IMPROVED
 The project has undergone a significant refactoring to address previous logic and consistency issues.
 
@@ -13,6 +18,7 @@ The project has undergone a significant refactoring to address previous logic an
     - Configured `Auth.js` with Google Provider.
     - Updated `schema.prisma` with mandatory Auth.js models.
 - **Phase 3 (List Management UI & Core Logic):**
+    - **Authentication:** Refactored `withAuth` wrapper to return a standardized `Result` type, forcing explicit error handling and eliminating silent failures.
     - **Security:** Implemented `userId` validation in all Service layers and Actions.
     - **Business Logic:** Implemented **Recursive Deep Cloning** for Lists, Groups, and Items.
     - **Recursion:** Refactored `listService.getListDetails` to build the tree in memory, supporting infinite nesting depth.
@@ -23,7 +29,7 @@ The project has undergone a significant refactoring to address previous logic an
     - **Reorder Logic:** Implemented **Atomic Mixed-Type Reordering** (Items and Groups together) using transactions.
     - **Position Management:** Unified duplication logic across Lists, Groups, and Items to use `updateMany` for position shifting, **correctly handling mixed-type collisions** by shifting both Items and Groups in the same container.
     - **Search/Filter:** Implemented a recursive search/filter bar in `ListDetailView` that filters items and groups by name, including descendant matches.
-    - **Testing:** Integrated **Vitest** and added unit tests for `list.service.ts` validating tree construction, deep cloning, and position management.
+    - **Testing:** Integrated **Vitest** and added unit tests for `list.service.ts` and `action-utils.ts`.
     - **Code Quality:** 
         - Resolved all ESLint errors and warnings.
         - Eliminated `any` types in Service layers and Tests.
@@ -32,6 +38,8 @@ The project has undergone a significant refactoring to address previous logic an
         - Translated all documentation to English-Only (en-us).
 
 **Recommended Next Steps:**
-1. Implement drag-and-drop for reordering.
-2. Add "Share List" functionality or multi-user collaboration features.
-3. Add multi-item selection for bulk actions (Delete, Move, Duplicate).
+1. Implement global `useAppAction` hook to standardize action execution and replace `console.error` with a clean, user-friendly notification system.
+2. Implement drag-and-drop for reordering.
+3. Add "Share List" functionality or multi-user collaboration features.
+4. Add multi-item selection for bulk actions (Delete, Move, Duplicate).
+
