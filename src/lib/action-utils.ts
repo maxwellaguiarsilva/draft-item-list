@@ -1,8 +1,5 @@
 import { auth } from "../auth";
-
-export type Result<T> = 
-  | { success: true; data: T } 
-  | { success: false; error: string };
+import { UnauthorizedError } from "./errors";
 
 /**
  * Higher-Order Function (HOC) to wrap Server Actions with authentication.
@@ -11,17 +8,12 @@ export type Result<T> =
 export function withAuth<T extends any[], R>(
   handler: (userId: string, ...args: T) => Promise<R>
 ) {
-  return async (...args: T): Promise<Result<R>> => {
+  return async (...args: T): Promise<R> => {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" };
+      throw new UnauthorizedError();
     }
     
-    try {
-      const data = await handler(session.user.id, ...args);
-      return { success: true, data };
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Internal Error" };
-    }
+    return await handler(session.user.id, ...args);
   };
 }

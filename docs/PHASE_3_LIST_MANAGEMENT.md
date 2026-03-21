@@ -10,7 +10,7 @@ To support both the Web UI and potential MCP/API access, the business logic will
 2.  **Delivery Layer (Web UI)**: Next.js Server Actions and Server Components that consume the Service Layer.
 3.  **Delivery Layer (MCP/API)**: Future-proofed; can import `src/services/` directly.
 
-## Component Architecture (Vanilla CSS)
+## Component Architecture (Tailwind CSS)
 - **`Dashboard` (`/dashboard`)**: Lists all managed lists.
 - **`ListDetailView`**: Orchestrates the view of a specific list, its groups, and top-level items.
 - **`GroupView`**: Recursive component for hierarchical group structure.
@@ -21,7 +21,7 @@ To support both the Web UI and potential MCP/API access, the business logic will
 2.  **Core Services**: Implement CRUD for Lists, Groups, and Items in `src/services/`.
 3.  **Dashboard Implementation**: Basic list view and creation capability.
 4.  **List View Implementation**: Detailed view with group/item interactivity.
-5.  **Refinement**: Accessibility and responsive styling using Vanilla CSS.
+5.  **Refinement**: Accessibility and responsive styling using Tailwind CSS.
 
 ## UX Principles
 - Minimalist interface.

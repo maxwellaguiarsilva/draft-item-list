@@ -8,10 +8,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   logger: {
     error(error: any) {
-      if (error?.name === "JWTSessionError") {
-        console.warn("AVISO: Detectado cookie inválido/antigo de autenticação (JWTSessionError). Ignorando para não travar a tela.");
-      } else {
-        console.error(error);
+      if (error?.name !== "JWTSessionError") {
+        // Log real errors somewhere else, but not via console.error/warn
       }
     },
   },

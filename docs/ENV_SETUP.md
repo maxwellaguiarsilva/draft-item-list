@@ -1,21 +1,21 @@
-# Configuração de Ambiente
+# Environment Configuration
 
-## Estratégia de Variáveis de Ambiente
+## Environment Variable Strategy
 
-### 1. Desenvolvimento Local
-Utilizamos arquivos `.env` para gerenciar configurações locais de forma segura e prática.
+### 1. Local Development
+We use `.env` files to manage local configurations securely and practically.
 
-*   **`.env.local`**: Contém seus valores secretos reais (API keys, segredos do OAuth, URL do banco de dados). **NUNCA** commit este arquivo, pois ele contém dados sensíveis. Ele é ignorado pelo Git (`.gitignore`).
-*   **`.env.example`**: Arquivo de template contendo apenas as chaves necessárias, sem os valores reais. **DEVE** ser commitado no repositório para servir de guia para outros desenvolvedores.
+*   **`.env.local`**: Contains your actual secret values (API keys, OAuth secrets, database URL). **NEVER** commit this file, as it contains sensitive data. It is ignored by Git (`.gitignore`).
+*   **`.env.example`**: Template file containing only the necessary keys, without the actual values. **MUST** be committed to the repository to serve as a guide for other developers.
 
-**Passos para configurar o ambiente local:**
-1.  Copie o exemplo para criar seu arquivo local: `cp .env.example .env.local`
-2.  Preencha os valores reais das variáveis em `.env.local`.
+**Steps to set up the local environment:**
+1.  Copy the example to create your local file: `cp .env.example .env.local`
+2.  Fill in the actual variable values in `.env.local`.
 
-### 2. Produção (Google Cloud Platform)
-Em ambiente de produção (Cloud Run), **não utilizamos arquivos `.env` físicos**. As configurações são injetadas diretamente pela infraestrutura do GCP para garantir máxima segurança:
+### 2. Production (Google Cloud Platform)
+In the production environment (Cloud Run), **we do not use physical `.env` files**. The configurations are injected directly by the GCP infrastructure to ensure maximum security:
 
-*   **Variáveis públicas**: Injetadas via `--set-env-vars` no comando de deploy.
-*   **Variáveis sensíveis**: Gerenciadas via **Google Secret Manager** e referenciadas no deploy via `--set-secrets`.
+*   **Public variables**: Injected via `--set-env-vars` in the deploy command.
+*   **Sensitive variables**: Managed via **Google Secret Manager** and referenced in the deploy via `--set-secrets`.
 
-Consulte o documento `docs/GCP_AUTH_DEPLOY.md` para obter os comandos detalhados de deploy em produção.
+Consult the `docs/GCP_AUTH_DEPLOY.md` document for detailed production deploy commands.

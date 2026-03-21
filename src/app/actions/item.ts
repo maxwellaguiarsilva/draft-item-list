@@ -1,40 +1,30 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "../../auth";
+import { withAuth } from "@/lib/action-utils";
 import { itemService } from "../../services/item.service";
 
-export async function createItem(listId: string, data: { name: string; quantity?: number; position: number; groupId?: string }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await itemService.create(session.user.id, listId, data);
+export const createItem = withAuth(async (userId, listId: string, data: { name: string; quantity?: number; position: number; groupId?: string }) => {
+  await itemService.create(userId, listId, data);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function updateItem(id: string, data: { name?: string; quantity?: number; position?: number; groupId?: string }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await itemService.update(session.user.id, id, data);
+export const updateItem = withAuth(async (userId, id: string, data: { name?: string; quantity?: number; position?: number; groupId?: string }) => {
+  await itemService.update(userId, id, data);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function deleteItem(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await itemService.delete(session.user.id, id);
+export const deleteItem = withAuth(async (userId, id: string) => {
+  await itemService.delete(userId, id);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function duplicateItem(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await itemService.duplicate(session.user.id, id);
+export const duplicateItem = withAuth(async (userId, id: string) => {
+  await itemService.duplicate(userId, id);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function updateItemPosition(id: string, newPosition: number) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await itemService.updatePosition(session.user.id, id, newPosition);
+export const updateItemPosition = withAuth(async (userId, id: string, newPosition: number) => {
+  await itemService.updatePosition(userId, id, newPosition);
   revalidatePath(`/dashboard`);
-}
+});

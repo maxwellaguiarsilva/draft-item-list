@@ -2,12 +2,18 @@
 
 ## Overview
 "Draft Item List" is a simple, web-based SaaS application designed to empower users with zero technical knowledge to create and manage lists of any kind.
+All project must only have files in `en-us`.
+Any word in another language (such as pt-br) is not allowed in any file in this repository.
 
 ## Core Philosophy
 - **Minimalist & Accessible:** Built for users with limited technical literacy.
 - **High Abstraction:** Prioritize opinionated, high-level libraries.
 - **English-Only:** All content in en-us.
 - **Zero-Code Phase:** No code until explicit instruction.
+
+## Error Handling Policy
+- **No Console Logging:** The use of `console.error` is strictly prohibited.
+- **Exceptions Only:** All errors must be handled using exceptions. Errors must either be caught and handled locally or allowed to propagate for analysis.
 
 ## UX Guidelines
 - **Visuals:** Full dark mode (background: `#000000`, text: `#FFFFFF`).

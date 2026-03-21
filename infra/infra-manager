@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# infra-manager: Gerencia o ciclo de vida da infraestrutura do projeto
-# Uso: ./infra-manager [up|down]
+# infra-manager: Manages the project's infrastructure lifecycle
+# Usage: ./infra-manager [up|down]
 
 set -e
 
@@ -9,28 +9,28 @@ COMPOSE_FILE="infra/compose.yaml"
 SERVICE_NAME="database"
 
 wait_for_db() {
-  echo "Aguardando o banco de dados estar disponível em localhost:5432..."
-  # Tenta conectar no banco (usando netcat ou similar se disponível)
-  # Como estamos em um ambiente genérico, tentamos um loop simples
+  echo "Waiting for the database to be available at localhost:5432..."
+  # Try to connect to the DB (using netcat or similar if available)
+  # As we are in a generic environment, we try a simple loop
   until nc -z localhost 5432; do
-    echo "Banco ainda não disponível, aguardando..."
+    echo "Database still not available, waiting..."
     sleep 2
   done
-  echo "Banco de dados está pronto!"
+  echo "Database is ready!"
 }
 
 case "$1" in
   up)
-    echo "Subindo infraestrutura..."
+    echo "Starting infrastructure..."
     docker compose -f "$COMPOSE_FILE" up -d
     wait_for_db
     ;;
   down)
-    echo "Derrubando infraestrutura..."
+    echo "Stopping infrastructure..."
     docker compose -f "$COMPOSE_FILE" down
     ;;
   *)
-    echo "Uso: $0 {up|down}"
+    echo "Usage: $0 {up|down}"
     exit 1
     ;;
 esac

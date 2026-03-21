@@ -26,7 +26,7 @@ export default async function Home() {
         >
           <button
             type="submit"
-            className="cursor-pointer rounded-lg bg-red-600 px-8 py-4 text-2xl font-bold text-white transition hover:bg-red-700"
+            className="cursor-pointer rounded-lg bg-error px-8 py-4 text-2xl font-bold text-text transition hover:bg-red-700"
           >
             Sign out
           </button>
@@ -36,7 +36,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex h-screen w-full items-center justify-center bg-black">
       <form
         action={async () => {
           "use server";
@@ -45,7 +45,7 @@ export default async function Home() {
       >
         <button
           type="submit"
-          className="cursor-pointer rounded-lg bg-blue-600 px-8 py-4 text-2xl font-bold text-white transition hover:bg-blue-700"
+          className="!rounded-3xl !bg-accent !px-20 !py-10 !text-6xl !font-extrabold !text-text transition hover:!bg-accent-hover !shadow-2xl !ring-4 !ring-text"          aria-label="Sign in with your Google account"
         >
           Sign in with Google
         </button>

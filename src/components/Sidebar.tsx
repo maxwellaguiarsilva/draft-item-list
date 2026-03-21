@@ -33,10 +33,9 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown }: {
   }, []);
 
   return (
-    <div style={{ position: 'relative' }} ref={menuRef}>
+    <div className="relative" ref={menuRef}>
       <button 
-        className="icon-button"
-        style={{ fontSize: '1rem' }}
+        className="p-1 rounded cursor-pointer text-text-secondary hover:text-text text-base"
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
@@ -45,12 +44,12 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown }: {
         ⋮
       </button>
       {isOpen && (
-        <div className="menu-popup" style={{ right: 0, top: '100%', zIndex: 100 }}>
-          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onRename(); setIsOpen(false); }}>Rename</button>
-          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onDuplicate(); setIsOpen(false); }}>Duplicate</button>
-          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onMoveUp(); setIsOpen(false); }}>Move Up</button>
-          <button className="menu-item" onClick={(e) => { e.stopPropagation(); onMoveDown(); setIsOpen(false); }}>Move Down</button>
-          <button className="menu-item danger" onClick={(e) => { e.stopPropagation(); onDelete(); setIsOpen(false); }}>Delete</button>
+        <div className="absolute right-0 top-full z-10 bg-menu border border-border rounded p-1 min-w-[120px]">
+          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onRename(); setIsOpen(false); }}>Rename</button>
+          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onDuplicate(); setIsOpen(false); }}>Duplicate</button>
+          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onMoveUp(); setIsOpen(false); }}>Move Up</button>
+          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onMoveDown(); setIsOpen(false); }}>Move Down</button>
+          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover text-error" onClick={(e) => { e.stopPropagation(); onDelete(); setIsOpen(false); }}>Delete</button>
         </div>
       )}
     </div>
@@ -58,7 +57,7 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown }: {
 };
 
 export const Sidebar = ({ lists }: { lists: List[] }) => {
-  const { selectedListId, setSelectedListId, isSidebarOpen, toggleSidebar } = useAppContext();
+  const { selectedListId, setSelectedListId, isSidebarOpen, toggleSidebar, addNotification } = useAppContext();
 
   useEffect(() => {
     if (!selectedListId && lists.length > 0) {
@@ -69,13 +68,15 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
   const handleRename = async (list: List) => {
     const newName = prompt("Enter new list name:", list.name);
     if (newName && newName !== list.name) {
-      await updateList(list.id, { name: newName }).then(r => r.success || console.error(r.error));
+      const result = await updateList(list.id, { name: newName });
+      if (!result.success) addNotification(result.error, 'error');
     }
   };
 
   const handleDelete = async (list: List) => {
     if (confirm(`Delete list "${list.name}"?`)) {
-      await deleteList(list.id).then(r => r.success || console.error(r.error));
+      const result = await deleteList(list.id);
+      if (!result.success) addNotification(result.error, 'error');
       if (selectedListId === list.id) {
         setSelectedListId(null);
       }
@@ -83,31 +84,40 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Lists</h2>
-        <button onClick={toggleSidebar} className="icon-button">☰</button>
+    <aside className="flex flex-col h-full w-[260px] bg-bg border-r border-border">
+      <div className="p-4 flex justify-between items-center">
+        <h2 className="text-xl m-0">Lists</h2>
+        <button onClick={toggleSidebar} className="p-1 rounded cursor-pointer text-text-secondary hover:text-text">☰</button>
       </div>
       {isSidebarOpen && (
-        <div className="sidebar-content">
-          <div style={{ marginBottom: '1rem' }}>
+        <div className="flex-1 overflow-y-auto p-2">
+          <div className="mb-4">
             <ListForm />
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul className="list-none p-0 m-0">
             {lists.map((list) => (
               <li
                 key={list.id}
-                className={`list-item ${selectedListId === list.id ? 'selected' : ''}`}
+                className={`flex justify-between items-center p-3 rounded cursor-pointer transition-colors duration-200 hover:bg-hover ${selectedListId === list.id ? 'bg-accent' : ''}`}
                 onClick={() => setSelectedListId(list.id)}
               >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {list.name}
                 </span>
                 <EditMenu 
                     onRename={() => handleRename(list)}
-                    onDuplicate={() => duplicateList(list.id).then(r => r.success || console.error(r.error))}
-                    onMoveUp={() => moveList(list.id, 'up').then(r => r.success || console.error(r.error))}
-                    onMoveDown={() => moveList(list.id, 'down').then(r => r.success || console.error(r.error))}
+                    onDuplicate={async () => {
+                        const result = await duplicateList(list.id);
+                        if (!result.success) addNotification(result.error, 'error');
+                    }}
+                    onMoveUp={async () => {
+                        const result = await moveList(list.id, 'up');
+                        if (!result.success) addNotification(result.error, 'error');
+                    }}
+                    onMoveDown={async () => {
+                        const result = await moveList(list.id, 'down');
+                        if (!result.success) addNotification(result.error, 'error');
+                    }}
                     onDelete={() => handleDelete(list)}
                 />
               </li>

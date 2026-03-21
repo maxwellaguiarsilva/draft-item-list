@@ -1,10 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useAppContext } from "../context/AppContext";
 import { createList, getCategories } from "../app/actions/list";
 
 export function ListForm() {
   const [categories, setCategories] = useState<string[]>([]);
+  const { addNotification } = useAppContext();
   const [, action, pending] = useActionState(async (_prevState: unknown, formData: FormData) => {
     const name = formData.get("name") as string;
     const category = formData.get("category") as string;
@@ -15,27 +17,25 @@ export function ListForm() {
   useEffect(() => {
     getCategories().then((result) => {
       if (result.success) setCategories(result.data as string[]);
-      else console.error(result.error);
+      else addNotification(result.error, 'error');
     });
   }, []);
 
   return (
-    <form action={action} className="form-container" style={{ border: '1px solid var(--border-color)', borderRadius: '4px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <form action={action} className="flex flex-col gap-2 border border-border rounded p-4">
       <input 
         name="name" 
         placeholder="List Name" 
         required 
-        className="input-field" 
-        style={{ width: '100%', boxSizing: 'border-box' }}
+        className="bg-bg border border-border text-text p-2 rounded w-full box-border"
       />
-      <div style={{ position: 'relative' }}>
+      <div className="relative">
         <input 
           name="category" 
           placeholder="Category" 
           list="existing-categories"
           required 
-          className="input-field" 
-          style={{ width: '100%', boxSizing: 'border-box' }}
+          className="bg-bg border border-border text-text p-2 rounded w-full box-border"
         />
         <datalist id="existing-categories">
           {categories.map(cat => (
@@ -43,7 +43,7 @@ export function ListForm() {
           ))}
         </datalist>
       </div>
-      <button type="submit" disabled={pending} className="primary-button" style={{ width: '100%' }}>
+      <button type="submit" disabled={pending} className="bg-text text-bg border-none p-2 rounded cursor-pointer font-bold w-full disabled:opacity-50">
         {pending ? "Creating..." : "Create List"}
       </button>
     </form>

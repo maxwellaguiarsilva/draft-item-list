@@ -1,9 +1,8 @@
 # Project Status Summary
 
 ## 🚨 Critical Technical Debt (Highest Priority)
-- **UI Error Handling & Notification System:** Current implementation uses `console.error` as a stopgap placeholder for Server Action failures.
-    - **Proposed Solution:** Implement a global Notification system (using a Toast UI pattern, but abstracted). 
-    - **Implementation Strategy:** Create a custom hook `useAppAction` to encapsulate Server Action execution, automatically handling the `Result` type, triggering notifications for failures, and ensuring consistent type-safe interaction without bloating components with `if (result.success)` logic.
+- **Authentication/Layout Architecture (IN PROGRESS):** Currently, the `RootLayout` attempts to fetch user data and lists for the `Sidebar` before checking authentication, causing unauthorized access errors for unauthenticated users and blocking the dedicated login-only page.
+    - **Resolution Plan:** Refactor the application layout to decouple the unauthenticated (Login-only) page from the authenticated (Dashboard/Sidebar) layout.
 
 ## Current Phase: Phase 3 (List Management UI) - IMPROVED
 The project has undergone a significant refactoring to address previous logic and consistency issues.
@@ -18,7 +17,7 @@ The project has undergone a significant refactoring to address previous logic an
     - Configured `Auth.js` with Google Provider.
     - Updated `schema.prisma` with mandatory Auth.js models.
 - **Phase 3 (List Management UI & Core Logic):**
-    - **Authentication:** Refactored `withAuth` wrapper to return a standardized `Result` type, forcing explicit error handling and eliminating silent failures.
+    - **Authentication:** Refactored `withAuth` wrapper to throw `UnauthorizedError` instead of returning a result object, centralizing error handling.
     - **Security:** Implemented `userId` validation in all Service layers and Actions.
     - **Business Logic:** Implemented **Recursive Deep Cloning** for Lists, Groups, and Items.
     - **Recursion:** Refactored `listService.getListDetails` to build the tree in memory, supporting infinite nesting depth.
@@ -34,11 +33,12 @@ The project has undergone a significant refactoring to address previous logic an
         - Resolved all ESLint errors and warnings.
         - Eliminated `any` types in Service layers and Tests.
         - Refactored server actions for atomicity.
-        - Maintained 100% compliance with custom CSS variables and dark mode.
+        - Maintained 100% compliance with dark mode using Tailwind CSS.
+        - **Error Handling Policy:** Enforced exception-based error handling, prohibiting `console` logging and implementing a centralized `error.tsx` boundary for `UnauthorizedError`.
         - Translated all documentation to English-Only (en-us).
 
 **Recommended Next Steps:**
-1. Implement global `useAppAction` hook to standardize action execution and replace `console.error` with a clean, user-friendly notification system.
+1. **[CRITICAL]** Refactor layout architecture to decouple authenticated dashboard from unauthenticated landing page.
 2. Implement drag-and-drop for reordering.
 3. Add "Share List" functionality or multi-user collaboration features.
 4. Add multi-item selection for bulk actions (Delete, Move, Duplicate).

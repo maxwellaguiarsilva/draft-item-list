@@ -30,29 +30,16 @@ interface List {
   groups: Group[];
 }
 
-const IconButton = ({ children, onClick, className = "", style = {}, disabled = false, title = "" }: { 
+const IconButton = ({ children, onClick, className = "", disabled = false, title = "" }: { 
   children: React.ReactNode, 
   onClick: (e: React.MouseEvent) => void, 
   className?: string, 
-  style?: React.CSSProperties, 
   disabled?: boolean, 
   title?: string 
 }) => (
   <button 
     onClick={(e) => { e.stopPropagation(); onClick(e); }} 
-    className={`icon-button ${className}`} 
-    style={{ 
-      background: 'none', 
-      border: 'none', 
-      color: 'inherit', 
-      cursor: disabled ? 'not-allowed' : 'pointer', 
-      padding: '4px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      opacity: disabled ? 0.5 : 1,
-      ...style 
-    }}
+    className={`p-1 flex items-center justify-center rounded cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : 'opacity-100'} ${className}`}
     disabled={disabled}
     title={title}
   >
@@ -83,15 +70,15 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown, canMo
   }, []);
 
   return (
-    <div style={{ position: 'relative' }} ref={menuRef}>
+    <div className="relative" ref={menuRef}>
       <IconButton onClick={() => setIsOpen(!isOpen)} title="Actions">⋮</IconButton>
       {isOpen && (
-        <div className="menu-popup" style={{ right: 0, top: '100%', zIndex: 10 }}>
-          <button className="menu-item" onClick={() => { onRename(); setIsOpen(false); }}>Rename</button>
-          <button className="menu-item" onClick={() => { onDuplicate(); setIsOpen(false); }}>Duplicate</button>
-          <button className="menu-item" onClick={() => { onMoveUp(); setIsOpen(false); }} disabled={!canMoveUp}>Move Up</button>
-          <button className="menu-item" onClick={() => { onMoveDown(); setIsOpen(false); }} disabled={!canMoveDown}>Move Down</button>
-          <button className="menu-item danger" onClick={() => { onDelete(); setIsOpen(false); }}>Delete</button>
+        <div className="absolute right-0 top-full z-10 bg-black border border-gray-800 rounded p-1 min-w-[120px]">
+          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900" onClick={() => { onRename(); setIsOpen(false); }}>Rename</button>
+          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900" onClick={() => { onDuplicate(); setIsOpen(false); }}>Duplicate</button>
+          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900 disabled:opacity-50" onClick={() => { onMoveUp(); setIsOpen(false); }} disabled={!canMoveUp}>Move Up</button>
+          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900 disabled:opacity-50" onClick={() => { onMoveDown(); setIsOpen(false); }} disabled={!canMoveDown}>Move Down</button>
+          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900 text-red-500" onClick={() => { onDelete(); setIsOpen(false); }}>Delete</button>
         </div>
       )}
     </div>
@@ -142,24 +129,16 @@ const ItemView = ({ item, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDow
 
   return (
     <li 
-      style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        padding: '0.5rem',
-        borderRadius: '4px',
-        background: isHovered ? 'var(--hover-color)' : 'transparent',
-        transition: 'background 0.2s'
-      }}
+      className={`flex justify-between items-center p-2 rounded transition-colors duration-200 ${isHovered ? 'bg-hover' : 'bg-transparent'}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-        <span style={{ fontSize: '1.1rem' }}>{item.name}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#222', borderRadius: '4px', padding: '2px' }}>
-          <IconButton onClick={handleDecrement} disabled={item.quantity <= 1} style={{ fontSize: '1.2rem' }}>-</IconButton>
-          <span style={{ minWidth: '1.5rem', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</span>
-          <IconButton onClick={handleIncrement} style={{ fontSize: '1.2rem' }}>+</IconButton>
+      <div className="flex items-center gap-4 flex-1">
+        <span className="text-lg">{item.name}</span>
+        <div className="flex items-center gap-2 bg-border rounded p-1">
+          <IconButton onClick={handleDecrement} disabled={item.quantity <= 1} className="text-lg">-</IconButton>
+          <span className="min-w-[1.5rem] text-center font-bold">{item.quantity}</span>
+          <IconButton onClick={handleIncrement} className="text-lg">+</IconButton>
         </div>
       </div>
       
@@ -268,19 +247,13 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
 
   return (
     <div 
-      style={{ 
-        marginLeft: '1rem', 
-        borderLeft: '1px solid var(--border-color)', 
-        paddingLeft: '1rem', 
-        marginTop: '1rem',
-        position: 'relative'
-      }}
+      className="ml-4 border-l border-border pl-4 mt-4 relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-        <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{group.name}</h4>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="m-0 text-xl">{group.name}</h4>
+        <div className="flex gap-2 items-center">
           {isHovered && (
             <>
               <IconButton onClick={handleAddItem} title="Add Item">+</IconButton>
@@ -299,7 +272,7 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
         </div>
       </div>
 
-      <div style={{ padding: 0 }}>
+      <div className="p-0">
         {filtered.map((entity, index) => {
           const isItem = 'quantity' in entity;
           if (isItem) {
@@ -336,13 +309,12 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
 };
 
 export const ListDetailView = () => {
-  const { selectedListId } = useAppContext();
+  const { selectedListId, addNotification } = useAppContext();
   const [list, setList] = useState<List | null>(null);
   const [loading, setLoading] = useState(false);
   const [prevId, setPrevId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Set loading state during render if the ID changed to avoid synchronous effect updates
   if (selectedListId !== prevId) {
     setPrevId(selectedListId);
     if (selectedListId) {
@@ -355,12 +327,18 @@ export const ListDetailView = () => {
     }
   }
 
-  const refreshList = () => {
+  const refreshList = async () => {
     if (selectedListId) {
-      getListDetails(selectedListId).then((result) => {
-        if (result.success) setList(result.data as List);
-        else console.error(result.error);
-      });
+      try {
+        const data = await getListDetails(selectedListId);
+        setList(data as List);
+      } catch (error) {
+        if (error instanceof Error) {
+          addNotification(error.message, 'error');
+        } else {
+          addNotification("An unexpected error occurred", 'error');
+        }
+      }
     }
   };
 
@@ -368,10 +346,14 @@ export const ListDetailView = () => {
     let isMounted = true;
     if (selectedListId) {
       getListDetails(selectedListId)
-        .then((result) => {
+        .then((data) => {
           if (isMounted) {
-            if (result.success) setList(result.data as List);
-            else console.error(result.error);
+            setList(data as List);
+          }
+        })
+        .catch((error) => {
+          if (isMounted) {
+            addNotification(error instanceof Error ? error.message : "An unexpected error occurred", 'error');
           }
         })
         .finally(() => {
@@ -381,9 +363,9 @@ export const ListDetailView = () => {
     return () => { isMounted = false; };
   }, [selectedListId]);
 
-  if (!selectedListId) return <div style={{ padding: '2rem', color: 'var(--text-color)' }}>Select a list from the sidebar.</div>;
-  if (loading && !list) return <div style={{ padding: '2rem', color: 'var(--text-color)' }}>Loading list details...</div>;
-  if (!list) return <div style={{ padding: '2rem', color: 'var(--text-color)' }}>List not found.</div>;
+  if (!selectedListId) return <div className="p-8 text-white">Select a list from the sidebar.</div>;
+  if (loading && !list) return <div className="p-8 text-white">Loading list details...</div>;
+  if (!list) return <div className="p-8 text-white">List not found.</div>;
 
   const handleAddRootItem = async () => {
     const name = prompt("Enter item name:");
@@ -424,58 +406,44 @@ export const ListDetailView = () => {
   const filterEntity = (entity: Item | Group): boolean => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    
-    // Check if the current entity matches
     if (entity.name.toLowerCase().includes(query)) return true;
-    
-    // If it's a group, check its children
     if (!('quantity' in entity)) {
       const g = entity as Group;
       const hasMatchingChild = (g.children || []).some(child => filterEntity(child));
       const hasMatchingItem = (g.items || []).some(item => item.name.toLowerCase().includes(query));
       return hasMatchingChild || hasMatchingItem;
     }
-    
     return false;
   };
 
   const filteredRoot = combinedRoot.filter(entity => filterEntity(entity));
 
   return (
-    <div style={{ padding: '2rem', flex: 1, overflowY: 'auto', color: 'var(--text-color)' }}>
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div className="p-8 flex-1 overflow-y-auto text-white">
+      <header className="mb-8 flex justify-between items-start">
         <div>
-          <h2 style={{ fontSize: '2.5rem', margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>{list.name}</h2>
-          <span style={{ background: 'var(--hover-color)', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          <h2 className="text-4xl m-0 mb-2 font-bold">{list.name}</h2>
+          <span className="bg-hover px-3 py-1 rounded text-sm text-text-secondary">
             {list.category}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', alignItems: 'flex-end' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={handleAddRootItem} className="primary-button" style={{ padding: '0.5rem 1rem' }}>+ Item</button>
-            <button onClick={handleAddRootGroup} className="primary-button" style={{ padding: '0.5rem 1rem' }}>+ Group</button>
+        <div className="flex gap-2 flex-col items-end">
+          <div className="flex gap-2">
+            <button onClick={handleAddRootItem} className="bg-accent text-text px-4 py-2 rounded hover:bg-accent-hover">+ Item</button>
+            <button onClick={handleAddRootGroup} className="bg-accent text-text px-4 py-2 rounded hover:bg-accent-hover">+ Group</button>
           </div>
           <input 
             type="text" 
             placeholder="Search items..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-            style={{ 
-              background: 'transparent', 
-              border: '1px solid var(--border-color)', 
-              borderRadius: '4px', 
-              padding: '0.5rem', 
-              color: 'var(--text-color)',
-              width: '250px',
-              marginTop: '0.5rem'
-            }}
+            className="bg-transparent border border-border rounded p-2 text-text w-[250px] mt-2"
           />
         </div>
       </header>
       
-      <div className="list-content" style={{ maxWidth: '800px' }}>
-        <div style={{ marginBottom: '1rem' }}>
+      <div className="max-w-[800px]">
+        <div className="mb-4">
           {filteredRoot.map((entity, index) => {
             const isItem = 'quantity' in entity;
             if (isItem) {

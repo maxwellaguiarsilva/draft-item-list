@@ -1,52 +1,52 @@
-# Configuração de Deploy Seguro no GCP
+# Secure Deploy Configuration on GCP
 
-Este guia descreve como gerenciar variáveis de ambiente de forma segura para o projeto ao realizar o deploy no Google Cloud Platform (GCP), utilizando o `gcloud CLI` e seguindo as melhores práticas de segurança.
+This guide describes how to manage environment variables securely for the project when deploying to Google Cloud Platform (GCP), using `gcloud CLI` and following security best practices.
 
-## Visão Geral
+## Overview
 
-Para proteger chaves de API e segredos (`AUTH_GOOGLE_SECRET`, `AUTH_SECRET`), adotaremos a seguinte estratégia:
+To protect API keys and secrets (`AUTH_GOOGLE_SECRET`, `AUTH_SECRET`), we will adopt the following strategy:
 
-| Variável | Tipo | Estratégia |
+| Variable | Type | Strategy |
 | :--- | :--- | :--- |
-| `AUTH_GOOGLE_ID` | Pública/Não Sensível | Variável de Ambiente (`--set-env-vars`) |
-| `AUTH_GOOGLE_SECRET` | Sensível | Google Secret Manager (`--set-secrets`) |
-| `AUTH_SECRET` | Sensível | Google Secret Manager (`--set-secrets`) |
+| `AUTH_GOOGLE_ID` | Public/Non-Sensitive | Environment Variable (`--set-env-vars`) |
+| `AUTH_GOOGLE_SECRET` | Sensitive | Google Secret Manager (`--set-secrets`) |
+| `AUTH_SECRET` | Sensitive | Google Secret Manager (`--set-secrets`) |
 
 ---
 
-## Passo a Passo
+## Step-by-Step
 
-### 1. Variáveis de Ambiente Simples (Não sensíveis)
-Definidas diretamente no comando de deploy.
+### 1. Simple Environment Variables (Non-sensitive)
+Defined directly in the deploy command.
 
 ```bash
-# Exemplo
-gcloud run deploy [NOME_DO_SERVICO] \
-  --set-env-vars="AUTH_GOOGLE_ID=seu-id-publico"
+# Example
+gcloud run deploy [SERVICE_NAME] \
+  --set-env-vars="AUTH_GOOGLE_ID=your-public-id"
 ```
 
-### 2. Google Secret Manager (Variáveis sensíveis)
+### 2. Google Secret Manager (Sensitive variables)
 
-#### A. Criar os segredos no GCP
-Substitua `[SEU_VALOR_SECRETO]` pelo valor real (sem aspas extras no shell).
+#### A. Create the secrets in GCP
+Replace `[YOUR_SECRET_VALUE]` with the actual value (without extra quotes in the shell).
 
 ```bash
-# Criar AUTH_GOOGLE_SECRET
-echo -n "[SEU_GOOGLE_SECRET]" | gcloud secrets create AUTH_GOOGLE_SECRET --data-file=-
+# Create AUTH_GOOGLE_SECRET
+echo -n "[YOUR_GOOGLE_SECRET]" | gcloud secrets create AUTH_GOOGLE_SECRET --data-file=-
 
-# Criar AUTH_SECRET
-echo -n "[SEU_AUTH_SECRET]" | gcloud secrets create AUTH_SECRET --data-file=-
+# Create AUTH_SECRET
+echo -n "[YOUR_AUTH_SECRET]" | gcloud secrets create AUTH_SECRET --data-file=-
 ```
 
-#### B. Conceder permissão ao Cloud Run
-O serviço precisa de permissão para acessar os segredos.
+#### B. Grant permission to Cloud Run
+The service needs permission to access the secrets.
 
 ```bash
-# Obter o e-mail da conta de serviço (Compute Engine default service account)
+# Get the service account email (Compute Engine default service account)
 PROJECT_NUMBER=$(gcloud projects describe $GOOGLE_CLOUD_PROJECT --format="value(projectNumber)")
 SERVICE_ACCOUNT="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 
-# Conceder acesso aos segredos
+# Grant access to secrets
 gcloud secrets add-iam-policy-binding AUTH_GOOGLE_SECRET \
   --member="serviceAccount:$SERVICE_ACCOUNT" \
   --role="roles/secretmanager.secretAccessor"
@@ -56,34 +56,32 @@ gcloud secrets add-iam-policy-binding AUTH_SECRET \
   --role="roles/secretmanager.secretAccessor"
 ```
 
-### 3. Deploy Referenciando Segredos
-No comando de deploy, utilize a flag `--set-secrets`.
+### 3. Deploy Referencing Secrets
+In the deploy command, use the `--set-secrets` flag.
 
 ```bash
-gcloud run deploy [NOME_DO_SERVICO] \
-  --set-env-vars="AUTH_GOOGLE_ID=seu-id-publico" \
+gcloud run deploy [SERVICE_NAME] \
+  --set-env-vars="AUTH_GOOGLE_ID=your-public-id" \
   --set-secrets="AUTH_GOOGLE_SECRET=AUTH_GOOGLE_SECRET:latest,AUTH_SECRET=AUTH_SECRET:latest"
 ```
 
 ---
 
-## Verificação
+## Verification
 
-Para verificar se os segredos foram aplicados corretamente, você pode inspecionar a configuração do serviço rodando:
+To verify if the secrets were applied correctly, you can inspect the service configuration by running:
 
 ```bash
-gcloud run services describe [NOME_DO_SERVICO] --format="table(spec.template.spec.containers.env)"
+gcloud run services describe [SERVICE_NAME] --format="table(spec.template.spec.containers.env)"
 ```
-Certifique-se de que as variáveis apontam para os segredos configurados.
+Ensure that the variables point to the configured secrets.
 
 ---
 
-## Futuro: Automação com IaC
+## Future: Automation with IaC
 
-Para alcançar a automação total da infraestrutura do GCP (evitando Console Web), utilizaremos **Terraform** (IaC):
+To achieve full automation of GCP infrastructure (avoiding Web Console), we will use **Terraform** (IaC):
 
-- **OAuth:** Provisionamento da tela de consentimento e IDs via recursos `google_iap_*` ou APIs de serviços.
-- **Segredos:** Gerenciamento dos segredos (`secret manager`) via `google_secret_manager_secret`.
-- **Pipeline:** Integração com GitHub Actions para automação de deploy contínuo.
-
-```
+- **OAuth:** Provisioning of the consent screen and IDs via `google_iap_*` resources or service APIs.
+- **Secrets:** Management of secrets (`secret manager`) via `google_secret_manager_secret`.
+- **Pipeline:** Integration with GitHub Actions for automated continuous deployment.

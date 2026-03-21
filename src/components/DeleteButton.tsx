@@ -1,22 +1,18 @@
 "use client";
 
 import { deleteList } from "../app/actions/list";
-import { useTransition } from "react";
+import { useAppAction } from "@/hooks/useAppAction";
 
 export function DeleteButton({ id }: { id: string }) {
-  const [isPending, startTransition] = useTransition();
+  const { execute, isPending } = useAppAction(deleteList);
 
   return (
    <button
-     onClick={() => startTransition(async () => {
-       const result = await deleteList(id);
-       if (!result.success) console.error(result.error);
-     })}
+     onClick={() => execute(id)}
      disabled={isPending}
      className="text-red-500"
    >
      {isPending ? "Deleting..." : "Delete"}
    </button>
   );
-
 }

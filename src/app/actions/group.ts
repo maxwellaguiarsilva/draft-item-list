@@ -1,40 +1,30 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "../../auth";
+import { withAuth } from "@/lib/action-utils";
 import { groupService } from "../../services/group.service";
 
-export async function createGroup(listId: string, data: { name: string; parentId?: string; position: number }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await groupService.create(session.user.id, listId, data);
+export const createGroup = withAuth(async (userId, listId: string, data: { name: string; parentId?: string; position: number }) => {
+  await groupService.create(userId, listId, data);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function updateGroup(id: string, data: { name?: string; position?: number; parentId?: string }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await groupService.update(session.user.id, id, data);
+export const updateGroup = withAuth(async (userId, id: string, data: { name?: string; position?: number; parentId?: string }) => {
+  await groupService.update(userId, id, data);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function deleteGroup(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await groupService.delete(session.user.id, id);
+export const deleteGroup = withAuth(async (userId, id: string) => {
+  await groupService.delete(userId, id);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function duplicateGroup(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await groupService.duplicate(session.user.id, id);
+export const duplicateGroup = withAuth(async (userId, id: string) => {
+  await groupService.duplicate(userId, id);
   revalidatePath(`/dashboard`);
-}
+});
 
-export async function updateGroupPosition(id: string, newPosition: number) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  await groupService.updatePosition(session.user.id, id, newPosition);
+export const updateGroupPosition = withAuth(async (userId, id: string, newPosition: number) => {
+  await groupService.updatePosition(userId, id, newPosition);
   revalidatePath(`/dashboard`);
-}
+});
