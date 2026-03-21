@@ -45,7 +45,8 @@ export default async function Home() {
       >
         <button
           type="submit"
-          className="!rounded-3xl !bg-accent !px-20 !py-10 !text-6xl !font-extrabold !text-text transition hover:!bg-accent-hover !shadow-2xl !ring-4 !ring-text"          aria-label="Sign in with your Google account"
+          className="btn-base btn-xl btn-primary"
+          aria-label="Sign in with your Google account"
         >
           Sign in with Google
         </button>
