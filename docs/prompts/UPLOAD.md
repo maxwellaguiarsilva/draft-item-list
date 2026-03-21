@@ -1,6 +1,7 @@
 # Git Upload Protocol
 
 This document defines the steps for uploading changes to the remote repository.
+Whenever the user attaches this file, you are authorized to run the workflow completely on your own, without requesting permissions or interruptions, except in serious cases as mentioned in this document.
 
 ## 1. Pre-Flight Checks
 - **Synchronize:** Pull the latest changes from the remote repository:

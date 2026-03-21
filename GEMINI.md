@@ -9,7 +9,6 @@ Any word in another language (such as pt-br) is not allowed in any file in this 
 - **Minimalist & Accessible:** Built for users with limited technical literacy.
 - **High Abstraction:** Prioritize opinionated, high-level libraries.
 - **English-Only:** All content in en-us.
-- **Zero-Code Phase:** No code until explicit instruction.
 
 ## Error Handling Policy
 - **No Console Logging:** The use of `console.error` is strictly prohibited.
