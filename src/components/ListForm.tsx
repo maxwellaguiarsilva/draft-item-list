@@ -11,14 +11,26 @@ export function ListForm() {
     const name = formData.get("name") as string;
     const category = formData.get("category") as string;
     if (!name || !category) return;
-    await createList({ name, category });
+    const result = await createList({ name, category });
+    if (!result.success) {
+      addNotification(result.error, 'error');
+    } else {
+      addNotification("List created successfully", 'success');
+    }
   }, null);
 
   useEffect(() => {
-    getCategories().then((result) => {
-      if (result.success) setCategories(result.data as string[]);
-      else addNotification(result.error, 'error');
-    });
+    getCategories()
+      .then((result) => {
+        if (result.success) {
+          setCategories(result.data);
+        } else {
+          addNotification(result.error, 'error');
+        }
+      })
+      .catch((error) => {
+        addNotification(error instanceof Error ? error.message : "Failed to load categories", 'error');
+      });
   }, []);
 
   return (

@@ -157,7 +157,7 @@ const ItemView = ({ item, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDow
   );
 };
 
-const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown, searchQuery }: {
+const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown, searchQuery, addNotification }: {
   group: Group;
   listId: string;
   onRefresh: () => void;
@@ -166,17 +166,14 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
   onMoveUp: () => void;
   onMoveDown: () => void;
   searchQuery: string;
+  addNotification: (message: string, type: 'error' | 'success') => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const filterEntity = (entity: Item | Group): boolean => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    
-    // Check if current matches
     if (entity.name.toLowerCase().includes(query)) return true;
-    
-    // Check descendants
     if (!('quantity' in entity)) {
       const g = entity as Group;
       const hasMatchingChild = (g.children || []).some(child => filterEntity(child));
@@ -235,11 +232,15 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
     const current = combined[index];
     const neighbor = combined[neighborIndex];
     
-    await swapEntities(
+    const result = await swapEntities(
       { id: current.id, type: 'quantity' in current ? 'item' : 'group', position: current.position },
       { id: neighbor.id, type: 'quantity' in neighbor ? 'item' : 'group', position: neighbor.position }
     );
-    onRefresh();
+    if (result.success) {
+      onRefresh();
+    } else {
+      addNotification(result.error, 'error');
+    }
   };
 
   const combined = [...(group.items || []), ...(group.children || [])].sort((a, b) => a.position - b.position);
@@ -299,6 +300,7 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
                 onMoveUp={() => handleMoveInside(index, 'up', combined)}
                 onMoveDown={() => handleMoveInside(index, 'down', combined)}
                 searchQuery={searchQuery}
+                addNotification={addNotification}
               />
             );
           }
@@ -330,8 +332,12 @@ export const ListDetailView = () => {
   const refreshList = async () => {
     if (selectedListId) {
       try {
-        const data = await getListDetails(selectedListId);
-        setList(data as List);
+        const result = await getListDetails(selectedListId);
+        if (result.success) {
+          setList(result.data as List);
+        } else {
+          addNotification(result.error, 'error');
+        }
       } catch (error) {
         if (error instanceof Error) {
           addNotification(error.message, 'error');
@@ -346,9 +352,13 @@ export const ListDetailView = () => {
     let isMounted = true;
     if (selectedListId) {
       getListDetails(selectedListId)
-        .then((data) => {
+        .then((result) => {
           if (isMounted) {
-            setList(data as List);
+            if (result.success) {
+              setList(result.data as List);
+            } else {
+              addNotification(result.error, 'error');
+            }
           }
         })
         .catch((error) => {
@@ -394,11 +404,15 @@ export const ListDetailView = () => {
     const current = combined[index];
     const neighbor = combined[neighborIndex];
     
-    await swapEntities(
+    const result = await swapEntities(
       { id: current.id, type: 'quantity' in current ? 'item' : 'group', position: current.position },
       { id: neighbor.id, type: 'quantity' in neighbor ? 'item' : 'group', position: neighbor.position }
     );
-    refreshList();
+    if (result.success) {
+      refreshList();
+    } else {
+      addNotification(result.error, 'error');
+    }
   };
 
   const combinedRoot = [...(list.items || []), ...(list.groups || [])].sort((a, b) => a.position - b.position);
@@ -470,6 +484,7 @@ export const ListDetailView = () => {
                   onMoveUp={() => handleMoveRoot(index, 'up', combinedRoot)}
                   onMoveDown={() => handleMoveRoot(index, 'down', combinedRoot)}
                   searchQuery={searchQuery}
+                  addNotification={addNotification}
                 />
               );
             }

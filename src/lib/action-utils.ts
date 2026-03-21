@@ -1,6 +1,8 @@
 import { auth } from "../auth";
 import { UnauthorizedError } from "./errors";
 
+export type Result<T> = { success: true; data: T } | { success: false; error: string };
+
 /**
  * Higher-Order Function (HOC) to wrap Server Actions with authentication.
  * It enforces that the action is only executed if the user is authenticated.
