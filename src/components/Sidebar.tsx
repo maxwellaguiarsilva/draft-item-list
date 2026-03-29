@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { deleteList, duplicateList, updateList, moveList, createList } from '../app/actions/list';
 import { NewListModal } from './NewListModal';
@@ -12,6 +12,14 @@ interface List {
   position: number;
 }
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+
 const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown }: {
   onRename: () => void;
   onDelete: () => void;
@@ -19,40 +27,24 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown }: {
   onMoveUp: () => void;
   onMoveDown: () => void;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
-    <div className="relative" ref={menuRef}>
-      <button 
-        className="p-1 rounded cursor-pointer text-text-secondary hover:text-text text-base"
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-      >
-        ⋮
-      </button>
-      {isOpen && (
-        <div className="absolute right-0 top-full z-10 bg-menu border border-border rounded p-1 min-w-[120px]">
-          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onRename(); setIsOpen(false); }}>Rename</button>
-          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onDuplicate(); setIsOpen(false); }}>Duplicate</button>
-          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onMoveUp(); setIsOpen(false); }}>Move Up</button>
-          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover" onClick={(e) => { e.stopPropagation(); onMoveDown(); setIsOpen(false); }}>Move Down</button>
-          <button className="w-full text-left bg-none border-none text-text p-2 text-sm cursor-pointer hover:bg-hover text-error" onClick={(e) => { e.stopPropagation(); onDelete(); setIsOpen(false); }}>Delete</button>
-        </div>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button 
+          className="p-1 rounded cursor-pointer text-text-secondary hover:text-text text-base"
+          onClick={(e) => e.stopPropagation()}
+        >
+          ⋮
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem onClick={onRename}>Rename</DropdownMenuItem>
+        <DropdownMenuItem onClick={onDuplicate}>Duplicate</DropdownMenuItem>
+        <DropdownMenuItem onClick={onMoveUp}>Move Up</DropdownMenuItem>
+        <DropdownMenuItem onClick={onMoveDown}>Move Down</DropdownMenuItem>
+        <DropdownMenuItem onClick={onDelete} variant="destructive">Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
@@ -85,20 +77,19 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
   };
 
   return (
-    <aside className="flex flex-col h-full w-[260px] bg-bg border-r border-border">
-      <div className="p-4 flex justify-between items-center">
-        <h2 className="text-xl m-0">Lists</h2>
-        <button onClick={toggleSidebar} className="p-1 rounded cursor-pointer text-text-secondary hover:text-text">☰</button>
-      </div>
-      {isSidebarOpen && (
-        <div className="flex-1 overflow-y-auto p-2">
+    <div className="relative h-full">
+      <aside className={`flex flex-col h-full bg-bg border-r border-border transition-all duration-300 ${isSidebarOpen ? 'w-[260px]' : 'w-0'} overflow-hidden`}>
+        <div className="p-4 flex justify-between items-center w-[260px]">
+          <h2 className="text-xl m-0">Lists</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 w-[260px]">
           <div className="mb-4">
-            <button 
+            <Button 
               onClick={() => setIsNewListModalOpen(true)}
-              className="w-full p-2 bg-green-600 text-white rounded text-center cursor-pointer hover:bg-green-700"
+              className="w-full"
             >
               +
-            </button>
+            </Button>
           </div>
           <ul className="list-none p-0 m-0">
             {lists.map((list) => (
@@ -130,15 +121,21 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
             ))}
           </ul>
         </div>
-      )}
-      <NewListModal 
-        isOpen={isNewListModalOpen} 
-        onClose={() => setIsNewListModalOpen(false)}
-        onConfirm={async (name: string) => {
-            const result = await createList({ name, category: "General" });
-            if (!result.success) addNotification(result.error, 'error');
-        }}
-      />
-    </aside>
+        <NewListModal 
+          isOpen={isNewListModalOpen} 
+          onClose={() => setIsNewListModalOpen(false)}
+          onConfirm={async (name: string) => {
+              const result = await createList({ name, category: "General" });
+              if (!result.success) addNotification(result.error, 'error');
+          }}
+        />
+      </aside>
+      <button 
+        onClick={toggleSidebar} 
+        className="absolute top-4 -right-10 p-2 rounded-r-md cursor-pointer text-text-secondary hover:text-text bg-bg border-y border-r border-border"
+      >
+        ☰
+      </button>
+    </div>
   );
 };

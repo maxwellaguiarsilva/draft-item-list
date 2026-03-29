@@ -1,9 +1,5 @@
 # Project Status Summary
 
-## 🚨 Critical Technical Debt (Highest Priority)
-- **Refactoring to Accessible Component Library (PENDING):** Transitioning from manual CSS component building to an "accessible-first" library approach using `shadcn/ui` and `radix-ui`.
-    - **Goal:** Leverage standard accessibility primitives while retaining full control over low-vision-focused visual styling (sizing, contrast, spacing).
-
 ## Current Phase: Phase 3 (List Management UI) - IMPROVED
 The project has undergone a significant refactoring to address previous logic and consistency issues.
 
@@ -37,14 +33,18 @@ The project has undergone a significant refactoring to address previous logic an
         - Maintained 100% compliance with dark mode using Tailwind CSS.
         - **Error Handling Policy:** Enforced exception-based error handling, prohibiting `console` logging and implementing a centralized `error.tsx` boundary for `UnauthorizedError`.
         - Translated all documentation to English-Only (en-us).
+    - **UI/UX:** Integrated `shadcn/ui` with `radix-ui` for accessible component primitives.
 
 ## Architectural Decision: Component Library (Shadcn/ui & Radix UI)
 - **Strategy:** Transition from custom "zero-dependency" UI to an "accessible-first" approach.
 - **Implementation:** Use `shadcn/ui` (Radix UI primitives for behavior + Tailwind CSS for styling) to offload accessibility logic while retaining 100% control over visual customization (colors, sizing, contrast for low-vision users).
 - **Goal:** Faster development, better accessibility compliance, maintainable visual consistency.
 
-**Recommended Next Steps:**
-1. **[CRITICAL]** Integrate `shadcn/ui` to begin refactoring existing UI components (Sidebar, Menus, Forms) for enhanced accessibility and maintainability.
+## Current Priorities:
+1. **Mobile-First UI Refactoring:** Transform the application from desktop-focused (hover menus) to mobile-first (persistent icon-based operations).
+    - **Plan:** See `docs/MOBILE_REFACTOR.md` for the design system and implementation plan.
+    - **Step 1:** Implement standardized `ActionMenu` component.
+    - **Step 2:** Refactor `ListDetailView` components.
 2. Implement drag-and-drop for reordering.
 3. Add "Share List" functionality or multi-user collaboration features.
 4. Add multi-item selection for bulk actions (Delete, Move, Duplicate).

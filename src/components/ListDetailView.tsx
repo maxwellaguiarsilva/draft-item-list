@@ -5,6 +5,8 @@ import { useAppContext } from '../context/AppContext';
 import { getListDetails, swapEntities } from '../app/actions/list';
 import { updateItem, deleteItem, createItem, duplicateItem } from '../app/actions/item';
 import { updateGroup, deleteGroup, createGroup, duplicateGroup } from '../app/actions/group';
+import { Button } from "@/components/ui/button"
+import { ActionMenu } from './ActionMenu';
 
 interface Item {
   id: string;
@@ -46,44 +48,6 @@ const IconButton = ({ children, onClick, className = "", disabled = false, title
     {children}
   </button>
 );
-
-const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown, canMoveUp, canMoveDown }: {
-  onRename: () => void;
-  onDelete: () => void;
-  onDuplicate: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative" ref={menuRef}>
-      <IconButton onClick={() => setIsOpen(!isOpen)} title="Actions">⋮</IconButton>
-      {isOpen && (
-        <div className="absolute right-0 top-full z-10 bg-black border border-gray-800 rounded p-1 min-w-[120px]">
-          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900" onClick={() => { onRename(); setIsOpen(false); }}>Rename</button>
-          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900" onClick={() => { onDuplicate(); setIsOpen(false); }}>Duplicate</button>
-          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900 disabled:opacity-50" onClick={() => { onMoveUp(); setIsOpen(false); }} disabled={!canMoveUp}>Move Up</button>
-          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900 disabled:opacity-50" onClick={() => { onMoveDown(); setIsOpen(false); }} disabled={!canMoveDown}>Move Down</button>
-          <button className="w-full text-left bg-transparent border-none text-white p-2 text-sm cursor-pointer hover:bg-gray-900 text-red-500" onClick={() => { onDelete(); setIsOpen(false); }}>Delete</button>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const ItemView = ({ item, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDown }: {
   item: Item;
@@ -128,11 +92,7 @@ const ItemView = ({ item, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDow
   };
 
   return (
-    <li 
-      className={`flex justify-between items-center p-2 rounded transition-colors duration-200 ${isHovered ? 'bg-hover' : 'bg-transparent'}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <li className="flex justify-between items-center p-2 rounded transition-colors duration-200">
       <div className="flex items-center gap-4 flex-1">
         <span className="text-lg">{item.name}</span>
         <div className="flex items-center gap-2 bg-border rounded p-1">
@@ -142,17 +102,15 @@ const ItemView = ({ item, onRefresh, canMoveUp, canMoveDown, onMoveUp, onMoveDow
         </div>
       </div>
       
-      {isHovered && (
-        <EditMenu 
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onDuplicate={handleDuplicate}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-          canMoveUp={canMoveUp}
-          canMoveDown={canMoveDown}
-        />
-      )}
+      <ActionMenu 
+        onRename={handleRename}
+        onDelete={handleDelete}
+        onDuplicate={handleDuplicate}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
+      />
     </li>
   );
 };
@@ -168,8 +126,6 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
   searchQuery: string;
   addNotification: (message: string, type: 'error' | 'success') => void;
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   const filterEntity = (entity: Item | Group): boolean => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -247,29 +203,21 @@ const GroupView = ({ group, listId, onRefresh, canMoveUp, canMoveDown, onMoveUp,
   const filtered = combined.filter(entity => filterEntity(entity));
 
   return (
-    <div 
-      className="ml-4 border-l border-border pl-4 mt-4 relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="ml-4 border-l border-border pl-4 mt-4 relative">
       <div className="flex justify-between items-center mb-2">
         <h4 className="m-0 text-xl">{group.name}</h4>
         <div className="flex gap-2 items-center">
-          {isHovered && (
-            <>
-              <IconButton onClick={handleAddItem} title="Add Item">+</IconButton>
-              <IconButton onClick={handleAddSubgroup} title="Add Group">📁</IconButton>
-              <EditMenu 
-                onRename={handleRename}
-                onDelete={handleDelete}
-                onDuplicate={handleDuplicate}
-                onMoveUp={onMoveUp}
-                onMoveDown={onMoveDown}
-                canMoveUp={canMoveUp}
-                canMoveDown={canMoveDown}
-              />
-            </>
-          )}
+          <IconButton onClick={handleAddItem} title="Add Item">+</IconButton>
+          <IconButton onClick={handleAddSubgroup} title="Add Group">📁</IconButton>
+          <ActionMenu 
+            onRename={handleRename}
+            onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+          />
         </div>
       </div>
 
@@ -371,7 +319,7 @@ export const ListDetailView = () => {
         });
     }
     return () => { isMounted = false; };
-  }, [selectedListId]);
+  }, [selectedListId, addNotification]);
 
   if (!selectedListId) return <div className="p-8 text-white">Select a list from the sidebar.</div>;
   if (loading && !list) return <div className="p-8 text-white">Loading list details...</div>;
@@ -443,8 +391,8 @@ export const ListDetailView = () => {
         </div>
         <div className="flex gap-2 flex-col items-end">
           <div className="flex gap-2">
-            <button onClick={handleAddRootItem} className="bg-accent text-text px-4 py-2 rounded hover:bg-accent-hover">+ Item</button>
-            <button onClick={handleAddRootGroup} className="bg-accent text-text px-4 py-2 rounded hover:bg-accent-hover">+ Group</button>
+            <Button onClick={handleAddRootItem}>+ Item</Button>
+            <Button onClick={handleAddRootGroup}>+ Group</Button>
           </div>
           <input 
             type="text" 

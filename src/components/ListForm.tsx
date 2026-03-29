@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import { createList, getCategories } from "../app/actions/list";
+import { Button } from "@/components/ui/button";
 
 export function ListForm() {
   const [categories, setCategories] = useState<string[]>([]);
@@ -31,7 +32,7 @@ export function ListForm() {
       .catch((error) => {
         addNotification(error instanceof Error ? error.message : "Failed to load categories", 'error');
       });
-  }, []);
+  }, [addNotification]);
 
   return (
     <form action={action} className="flex flex-col gap-2 border border-border rounded p-4">
@@ -55,9 +56,9 @@ export function ListForm() {
           ))}
         </datalist>
       </div>
-      <button type="submit" disabled={pending} className="bg-text text-bg border-none p-2 rounded cursor-pointer font-bold w-full disabled:opacity-50">
+      <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Creating..." : "Create List"}
-      </button>
+      </Button>
     </form>
   );
 }

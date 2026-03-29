@@ -11,6 +11,8 @@ export type Notification = {
 type AppContextType = {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
+  isEditMode: boolean;
+  toggleEditMode: () => void;
   selectedListId: string | null;
   setSelectedListId: (id: string | null) => void;
   notifications: Notification[];
@@ -22,10 +24,12 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const toggleEditMode = () => setIsEditMode((prev) => !prev);
 
   const addNotification = (message: string, type: 'success' | 'error') => {
     const id = Date.now().toString();
@@ -38,7 +42,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AppContext.Provider value={{ isSidebarOpen, toggleSidebar, selectedListId, setSelectedListId, notifications, addNotification, removeNotification }}>
+    <AppContext.Provider value={{ isSidebarOpen, toggleSidebar, isEditMode, toggleEditMode, selectedListId, setSelectedListId, notifications, addNotification, removeNotification }}>
       {children}
     </AppContext.Provider>
   );
