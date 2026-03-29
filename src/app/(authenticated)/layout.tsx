@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { Sidebar } from "@/components/Sidebar";
 import { listService } from "@/services";
 import { redirect } from "next/navigation";
+import { createDefaultData } from "../actions/onboarding";
+import { UnauthorizedError } from "@/lib/errors";
 
 export default async function AuthenticatedLayout({
   children,
@@ -14,7 +16,23 @@ export default async function AuthenticatedLayout({
     redirect("/");
   }
 
-  const lists = await listService.getAll(session.user.id);
+  let lists = await listService.getAll(session.user.id);
+  
+  if (lists.length === 0) {
+      try {
+        await createDefaultData();
+        // revalidatePath is not allowed during render.
+        // We will fetch the data again to ensure the UI is updated immediately.
+        lists = await listService.getAll(session.user.id);
+      } catch (error) {
+        if (error instanceof UnauthorizedError) {
+          // Properly clear the session, then redirect.
+          redirect("/api/auth/logout");
+        }
+        // Error will propagate to error.tsx
+        throw error;
+      }
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">

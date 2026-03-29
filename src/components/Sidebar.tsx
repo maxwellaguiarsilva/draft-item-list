@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { deleteList, duplicateList, updateList, moveList } from '../app/actions/list';
-import { ListForm } from './ListForm';
+import { deleteList, duplicateList, updateList, moveList, createList } from '../app/actions/list';
+import { NewListModal } from './NewListModal';
 
 interface List {
   id: string;
@@ -58,6 +58,7 @@ const EditMenu = ({ onRename, onDelete, onDuplicate, onMoveUp, onMoveDown }: {
 
 export const Sidebar = ({ lists }: { lists: List[] }) => {
   const { selectedListId, setSelectedListId, isSidebarOpen, toggleSidebar, addNotification } = useAppContext();
+  const [isNewListModalOpen, setIsNewListModalOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedListId && lists.length > 0) {
@@ -92,7 +93,12 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
       {isSidebarOpen && (
         <div className="flex-1 overflow-y-auto p-2">
           <div className="mb-4">
-            <ListForm />
+            <button 
+              onClick={() => setIsNewListModalOpen(true)}
+              className="w-full p-2 bg-green-600 text-white rounded text-center cursor-pointer hover:bg-green-700"
+            >
+              +
+            </button>
           </div>
           <ul className="list-none p-0 m-0">
             {lists.map((list) => (
@@ -125,6 +131,14 @@ export const Sidebar = ({ lists }: { lists: List[] }) => {
           </ul>
         </div>
       )}
+      <NewListModal 
+        isOpen={isNewListModalOpen} 
+        onClose={() => setIsNewListModalOpen(false)}
+        onConfirm={async (name: string) => {
+            const result = await createList({ name, category: "General" });
+            if (!result.success) addNotification(result.error, 'error');
+        }}
+      />
     </aside>
   );
 };

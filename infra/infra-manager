@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # infra-manager: Manages the project's infrastructure lifecycle
-# Usage: ./infra-manager [up|down]
+# Usage: ./infra-manager [up|down|full-reset]
 
 set -e
 
@@ -9,13 +9,25 @@ COMPOSE_FILE="infra/compose.yaml"
 SERVICE_NAME="database"
 
 wait_for_db() {
-  echo "Waiting for the database to be available at localhost:5432..."
-  # Try to connect to the DB (using netcat or similar if available)
-  # As we are in a generic environment, we try a simple loop
-  until nc -z localhost 5432; do
-    echo "Database still not available, waiting..."
+  echo "Waiting for the database to be available to Prisma (max 10 attempts)..."
+  local max_attempts=10
+  local attempt=1
+  local query_file="/tmp/db_ready_check.sql"
+  echo "SELECT 1;" > "$query_file"
+  
+  # Try to connect to the DB using Prisma until it succeeds
+  until npx prisma db execute --file "$query_file" --schema prisma/schema.prisma > /dev/null 2>&1 || [ "$attempt" -gt "$max_attempts" ]; do
+    echo "Database still not ready for Prisma, waiting (attempt $attempt/$max_attempts)..."
+    attempt=$((attempt+1))
     sleep 2
   done
+  
+  rm -f "$query_file"
+
+  if [ "$attempt" -gt "$max_attempts" ]; then
+    echo "Error: Database failed to start after $max_attempts attempts."
+    exit 1
+  fi
   echo "Database is ready!"
 }
 
@@ -29,8 +41,17 @@ case "$1" in
     echo "Stopping infrastructure..."
     docker compose -f "$COMPOSE_FILE" down
     ;;
+  full-reset)
+    echo "Performing full database reset..."
+    docker compose -f "$COMPOSE_FILE" down -v
+    docker compose -f "$COMPOSE_FILE" up -d
+    wait_for_db
+    echo "Applying migrations..."
+    npx prisma migrate deploy
+    echo "Database reset complete."
+    ;;
   *)
-    echo "Usage: $0 {up|down}"
+    echo "Usage: $0 {up|down|full-reset}"
     exit 1
     ;;
 esac

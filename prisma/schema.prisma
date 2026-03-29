@@ -62,7 +62,7 @@ model List {
   category  String
   position  Int      @default(0)
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   groups    Group[]
   items     Item[]
   createdAt DateTime @default(now())
@@ -74,9 +74,9 @@ model Group {
   name      String
   position  Int
   listId    String
-  list      List     @relation(fields: [listId], references: [id])
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
   parentId  String?
-  parent    Group?   @relation("GroupToGroup", fields: [parentId], references: [id])
+  parent    Group?   @relation("GroupToGroup", fields: [parentId], references: [id], onDelete: Cascade)
   children  Group[]  @relation("GroupToGroup")
   items     Item[]
   createdAt DateTime @default(now())
@@ -89,9 +89,9 @@ model Item {
   quantity  Int      @default(1)
   position  Int
   groupId   String?
-  group     Group?   @relation(fields: [groupId], references: [id])
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
   listId    String
-  list      List     @relation(fields: [listId], references: [id])
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
